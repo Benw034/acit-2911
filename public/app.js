@@ -716,7 +716,102 @@ async function doLogout() {
 
 
 document.addEventListener('DOMContentLoaded', () => {
-  loadDecks();
+  
+// CSV Import
+let csvFile = null;
+
+function openCsvModal() {
+  csvFile = null;
+  document.getElementById('csv-file-input').value = '';
+  document.getElementById('csv-drop-label').textContent = 'Drop your CSV here or click to browse';
+  document.getElementById('csv-result').classList.add('hidden');
+  document.getElementById('csv-import-btn').disabled = true;
+  openModal('csv-modal');
+}
+
+function closeCsvModal() { closeModal('csv-modal'); }
+
+function csvFileChosen(e) {
+  const file = e.target.files[0];
+  if (file) setCsvFile(file);
+}
+
+function csvDragOver(e) {
+  e.preventDefault();
+  document.getElementById('csv-dropzone').classList.add('border-stone-500', 'bg-stone-50');
+}
+
+function csvDragLeave() {
+  document.getElementById('csv-dropzone').classList.remove('border-stone-500', 'bg-stone-50');
+}
+
+function csvDrop(e) {
+  e.preventDefault();
+  csvDragLeave();
+  const file = e.dataTransfer.files[0];
+  if (file) setCsvFile(file);
+}
+
+function setCsvFile(file) {
+  if (!file.name.toLowerCase().endsWith('.csv')) {
+    showCsvResult('Only .csv files are allowed', 'error');
+    return;
+  }
+  csvFile = file;
+  document.getElementById('csv-drop-label').textContent = `✓ ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+  document.getElementById('csv-import-btn').disabled = false;
+  document.getElementById('csv-result').classList.add('hidden');
+}
+
+function showCsvResult(msg, type) {
+  const el = document.getElementById('csv-result');
+  el.textContent = msg;
+  el.className = `text-sm rounded-xl px-4 py-3 mb-4 ${
+    type === 'error'   ? 'bg-red-50 text-red-600 border border-red-200' :
+    type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' :
+                         'bg-stone-100 text-stone-600'
+  }`;
+  el.classList.remove('hidden');
+}
+
+async function submitCsv() {
+  if (!csvFile) return;
+
+  const btn = document.getElementById('csv-import-btn');
+  btn.disabled = true;
+  btn.textContent = 'Importing...';
+  document.getElementById('csv-result').classList.add('hidden');
+
+  try {
+    const formData = new FormData();
+    formData.append('file', csvFile);
+
+    const res = await fetch('/api/import/csv', { method: 'POST', body: formData });
+    const data = await res.json();
+
+    if (!res.ok) {
+      showCsvResult(data.error || 'Import failed', 'error');
+      return;
+    }
+
+    showCsvResult(data.message, 'success');
+    showToast(`✓ ${data.message}`);
+    loadDecks();
+
+    if (data.errors && data.errors.length > 0) {
+      console.warn('CSV row errors:', data.errors);
+    }
+
+    setTimeout(() => closeCsvModal(), 1800);
+  } catch (err) {
+    showCsvResult('Network error — try again', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Import';
+  }
+}
+
+loadDecks();
   document.getElementById('add-choice-btn')?.addEventListener('click', () => addChoiceRow());
 });
 
