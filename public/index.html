@@ -84,6 +84,19 @@
         <p class="text-stone-400 text-sm mt-1">Select a deck to start studying</p>
       </div>
       <div class="flex flex-col items-end gap-2 mt-1">
+        <div class="flex gap-2">
+          <button onclick="openNewDeckModal()"
+            class="flex items-center gap-2 bg-stone-900 text-white text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-stone-700 transition-colors">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            New Deck
+          </button>
+          <button onclick="openCsvModal()"
+            class="flex items-center gap-2 border border-stone-200 text-stone-700 text-sm font-semibold px-4 py-2.5 rounded-xl hover:border-stone-400 transition-colors">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Import CSV
+          </button>
+        </div>
+        <a href="/ai.html"
         <button onclick="openNewDeckModal()"
           class="flex items-center gap-2 bg-stone-900 text-white text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-stone-700 transition-colors">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -101,25 +114,13 @@
             Logout
           </button>
         </div>
-        <!-- Theme Palette Picker -->
-        <div class="relative" id="theme-picker-wrap">
-          <button onclick="toggleThemePicker()"
-            class="flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-lg border border-stone-200 text-stone-500 hover:border-stone-400 hover:text-stone-700 transition-colors"
-            title="Change theme">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/>
-              <path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
-            </svg>
-            <span id="theme-label">Theme</span>
-          </button>
-          <div id="theme-dropdown"
-            class="hidden absolute right-0 mt-2 p-2 bg-white border border-stone-200 rounded-xl shadow-xl z-50 flex flex-col gap-1 min-w-[140px]">
-            <button onclick="setTheme('light')"   data-theme-btn="light"   class="theme-opt flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium hover:bg-stone-100 transition-colors w-full text-left"><span class="w-4 h-4 rounded-full inline-block shrink-0" style="background:#ffffff;border:1.5px solid #d4d4d4"></span>Light</button>
-            <button onclick="setTheme('dark')"    data-theme-btn="dark"    class="theme-opt flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium hover:bg-stone-100 transition-colors w-full text-left"><span class="w-4 h-4 rounded-full inline-block shrink-0" style="background:#1c1917"></span>Dark</button>
-            <button onclick="setTheme('ocean')"   data-theme-btn="ocean"   class="theme-opt flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium hover:bg-stone-100 transition-colors w-full text-left"><span class="w-4 h-4 rounded-full inline-block shrink-0" style="background:#2563eb"></span>Ocean</button>
-            <button onclick="setTheme('forest')"  data-theme-btn="forest"  class="theme-opt flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium hover:bg-stone-100 transition-colors w-full text-left"><span class="w-4 h-4 rounded-full inline-block shrink-0" style="background:#15803d"></span>Forest</button>
-          </div>
-        </div>
+        <button onclick="toggleDark()" id="dark-toggle"
+          class="flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-lg border border-stone-200 text-stone-500 hover:border-stone-400 hover:text-stone-700 transition-colors">
+          <svg id="dark-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+          <span id="dark-label">Dark mode</span>
+        </button>
       </div>
     </div>
 
@@ -331,6 +332,48 @@
     </div>
   </div>
 
+
+  <!-- CSV Import Modal -->
+  <div id="csv-modal" class="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/40 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-200">
+    <div id="csv-modal-box" class="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl translate-y-4 transition-transform duration-200">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-2xl font-bold">Import CSV</h2>
+        <button onclick="closeCsvModal()" class="text-stone-400 hover:text-stone-700 w-7 h-7 flex items-center justify-center rounded-lg hover:bg-stone-100 transition-colors">✕</button>
+      </div>
+
+      <p class="text-sm text-stone-500 mb-5">Upload a <code class="bg-stone-100 px-1 rounded">.csv</code> file to bulk-import flashcards. Required columns: <code class="bg-stone-100 px-1 rounded">deck_title</code>, <code class="bg-stone-100 px-1 rounded">question</code>, <code class="bg-stone-100 px-1 rounded">answer</code>. Optional: <code class="bg-stone-100 px-1 rounded">deck_category</code>, <code class="bg-stone-100 px-1 rounded">card_type</code>, <code class="bg-stone-100 px-1 rounded">choices</code>.</p>
+
+      <!-- Drop zone -->
+      <label id="csv-dropzone"
+        class="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-stone-200 rounded-xl py-8 px-4 cursor-pointer hover:border-stone-400 hover:bg-stone-50 transition-colors mb-2"
+        ondragover="csvDragOver(event)" ondragleave="csvDragLeave(event)" ondrop="csvDrop(event)">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="text-stone-300"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <span id="csv-drop-label" class="text-sm text-stone-400 font-medium">Drop your CSV here or click to browse</span>
+        <input id="csv-file-input" type="file" accept=".csv" class="hidden" onchange="csvFileChosen(event)" />
+      </label>
+
+      <!-- Schema hint -->
+      <div class="relative group flex justify-end mb-3">
+        <button onclick="copyCsvSchema(this)"
+          class="w-5 h-5 rounded-full border border-stone-300 text-stone-400 text-[11px] font-bold flex items-center justify-center hover:border-stone-500 hover:text-stone-600 transition-colors">
+          ?
+        </button>
+        <div class="pointer-events-none invisible group-hover:visible absolute bottom-full right-0 mb-2 w-72 bg-stone-900 text-stone-200 text-xs rounded-xl p-4 shadow-xl z-20 leading-relaxed">
+          <p class="font-semibold text-white mb-2">CSV columns</p>
+          <p class="mb-1"><span class="text-stone-400">Required:</span> <code class="text-yellow-300">deck_title</code>, <code class="text-yellow-300">question</code>, <code class="text-yellow-300">answer</code></p>
+          <p class="mb-3"><span class="text-stone-400">Optional:</span> <code class="text-stone-300">deck_category</code>, <code class="text-stone-300">card_type</code> <span class="text-stone-500">(basic · multiple_choice · true_false)</span>, <code class="text-stone-300">choices</code> <span class="text-stone-500">(pipe-separated; the choice matching answer is marked correct)</span></p>
+          <p class="text-stone-500 italic">Click to copy a template.</p>
+        </div>
+      </div>
+
+      <!-- Result area -->
+      <div id="csv-result" class="hidden text-sm rounded-xl px-4 py-3 mb-4"></div>
+
+      <div class="flex justify-end gap-3">
+        <button onclick="closeCsvModal()" class="px-4 py-2 text-sm font-medium rounded-xl border border-stone-200 hover:border-stone-400 transition-colors">Cancel</button>
+        <button id="csv-import-btn" onclick="submitCsv()" disabled
+          class="px-4 py-2 text-sm font-semibold rounded-xl bg-stone-900 text-white hover:bg-stone-700 transition-colors">
+          Import
   <!-- Share Deck -->
   <div id="share-modal" class="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/40 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-200">
     <div id="share-modal-box" class="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl translate-y-4 transition-transform duration-200">
