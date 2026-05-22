@@ -35,5 +35,7 @@ export async function createAuthedAgent(app, username = "testuser") {
  */
 export async function cleanupTestUsers() {
   await pool.query("DELETE FROM session");
+  // share_tokens cascade from decks, but users cascade from users — be explicit
+  await pool.query("DELETE FROM share_tokens");
   await pool.query("DELETE FROM users");
 }

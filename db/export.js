@@ -5,49 +5,47 @@ import pool from "./pool.js";
 // Dynamically target the exact folder where export.js sits
 export async function exportDatabaseToJson(outputFilePath = path.join(import.meta.dirname, "db_export.json")) {
   try {
-    console.log("Initiating complete database structural export...");
+    console.log("Exporting decks and cards (users table excluded)...");
 
+    // Export decks grouped by user_id — no user data, no password hashes
     const query = `
-      SELECT 
-        u.id AS "userId", u.username, u.creation_time AS "userCreationTime",
+      SELECT
+        d.id AS "deckId", d.user_id AS "userId", u.username AS "username",
+        d.title, d.category, d.creation_time AS "creationTime",
         COALESCE(
-          json_agg(
+          (SELECT json_agg(
             json_build_object(
-              'deckId', d.id, 'title', d.title, 'category', d.category, 'creationTime', d.creation_time,
-              'cards', COALESCE(c.cards_list, '[]'::json)
+              'cardId', card_sub.id,
+              'question', card_sub.question,
+              'answer', card_sub.answer,
+              'cardType', card_sub.card_type,
+              'position', card_sub.position,
+              'creationTime', card_sub.creation_time,
+              'choices', COALESCE(
+                (SELECT json_agg(json_build_object(
+                  'choiceId', cc.id,
+                  'choiceText', cc.choice_text,
+                  'isCorrect', cc.is_correct
+                )) FROM card_choices cc WHERE cc.card_id = card_sub.id),
+                '[]'::json
+              )
             )
-          ) FILTER (WHERE d.id IS NOT NULL), '[]'::json
-        ) AS decks
-      FROM users u
-      LEFT JOIN decks d ON d.user_id = u.id
-      LEFT JOIN (
-        SELECT 
-          card_sub.deck_id,
-          json_agg(
-            json_build_object(
-              'cardId', card_sub.id, 'question', card_sub.question, 'answer', card_sub.answer,
-              'cardType', card_sub.card_type, 'creationTime', card_sub.creation_time,
-              'choices', COALESCE(choice_sub.choices_list, '[]'::json)
-            )
-          ) AS cards_list
-        FROM cards card_sub
-        LEFT JOIN (
-          SELECT 
-            card_id,
-            json_agg(json_build_object('choiceId', id, 'choiceText', choice_text, 'isCorrect', is_correct)) AS choices_list
-          FROM card_choices GROUP BY card_id
-        ) choice_sub ON choice_sub.card_id = card_sub.id
-        GROUP BY card_sub.deck_id
-      ) c ON c.deck_id = d.id GROUP BY u.id, u.username, u.creation_time;
+            ORDER BY card_sub.position ASC
+          ) FROM cards card_sub WHERE card_sub.deck_id = d.id),
+          '[]'::json
+        ) AS cards
+      FROM decks d
+      JOIN users u ON u.id = d.user_id
+      ORDER BY d.creation_time ASC;
     `;
 
     const result = await pool.query(query);
     await fs.writeFile(outputFilePath, JSON.stringify(result.rows, null, 2), "utf-8");
-    
-    console.log(`Export completed successfully! File saved to: ${outputFilePath}`);
+
+    console.log(`Export complete — ${result.rows.length} decks saved to: ${outputFilePath}`);
     return result.rows;
   } catch (error) {
-    console.error("Database structural export failed:", error);
+    console.error("Export failed:", error);
     throw error;
   }
 }

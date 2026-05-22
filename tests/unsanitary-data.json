@@ -1,16 +1,247 @@
 [
-  { "name": "Basic Script", "input": "<script>alert(1)</script>", "expected": "" },
-  { "name": "Image Error", "input": "<img src=x onerror=alert(1)>", "expected": "<img src=\"x\">" },
-  { "name": "Simple Iframe", "input": "<iframe src='javascript:alert(1)'></iframe>", "expected": "" },
-  { "name": "Style Block", "input": "Text <style>body{color:red}</style>", "expected": "Text" },
-  { "name": "JavaScript Link", "input": "<a href='javascript:alert(1)'>Click</a>", "expected": "<a>Click</a>" },
-  { "name": "SVG Onload", "input": "<svg onload=alert(1)>", "expected": "<svg></svg>" },
-  { "name": "Marquee Onstart", "input": "<marquee onstart=alert(1)>Hello</marquee>", "expected": "<marquee>Hello</marquee>" },
-  { "name": "Body Onload", "input": "<body onload=alert(1)>", "expected": "" },
-  { "name": "Table Background", "input": "<table background='javascript:alert(1)'>", "expected": "<table></table>" },
-  { "name": "Nested Obfuscation", "input": "<<script>alert(1)</script>", "expected": "&lt;" },
-  { "name": "Attribute Injection", "input": "<div onmouseover='alert(1)'>Hover me</div>", "expected": "<div>Hover me</div>" },
-  { "name": "Broken Tag", "input": "<img src=\"javascript:alert('XSS')\"", "expected": "" },
-  { "name": "Safe Bold", "input": "This is <b>Bold</b>", "expected": "This is <b>Bold</b>" },
-  { "name": "Safe Link", "input": "<a href='https://google.com'>Google</a>", "expected": "<a href=\"https://google.com\">Google</a>" }
+  {
+    "name": "Basic Script Tag",
+    "input": "<script>alert(1)</script>",
+    "expected": ""
+  },
+  {
+    "name": "Script With Src",
+    "input": "<script src='https://evil.com/x.js'></script>",
+    "expected": ""
+  },
+  {
+    "name": "Uppercase Script",
+    "input": "<SCRIPT>alert(1)</SCRIPT>",
+    "expected": ""
+  },
+  {
+    "name": "Mixed Case Script",
+    "input": "<ScRiPt>alert(1)</sCrIpT>",
+    "expected": ""
+  },
+  {
+    "name": "Script In Text",
+    "input": "Hello <script>alert(1)</script> World",
+    "expected": "Hello  World"
+  },
+  {
+    "name": "Nested Obfuscation",
+    "input": "<<script>alert(1)</script>",
+    "expected": "&lt;"
+  },
+  {
+    "name": "Broken Tag",
+    "input": "<img src=\"javascript:alert('XSS')\"",
+    "expected": ""
+  },
+  {
+    "name": "Image onerror",
+    "input": "<img src=x onerror=alert(1)>",
+    "expected": "<img src=\"x\">"
+  },
+  {
+    "name": "Div onmouseover",
+    "input": "<div onmouseover='alert(1)'>Hover me</div>",
+    "expected": "<div>Hover me</div>"
+  },
+  {
+    "name": "Body onload",
+    "input": "<body onload=alert(1)>",
+    "expected": ""
+  },
+  {
+    "name": "SVG onload",
+    "input": "<svg onload=alert(1)>",
+    "expected": "<svg></svg>"
+  },
+  {
+    "name": "Marquee onstart",
+    "input": "<marquee onstart=alert(1)>Hello</marquee>",
+    "expected": "<marquee>Hello</marquee>"
+  },
+  {
+    "name": "Input onfocus",
+    "input": "<input onfocus=alert(1) autofocus>",
+    "expected": "<input>"
+  },
+  {
+    "name": "Details ontoggle",
+    "input": "<details ontoggle=alert(1)>x</details>",
+    "expected": "<details>x</details>"
+  },
+  {
+    "name": "Video onerror",
+    "input": "<video onerror=alert(1)><source></video>",
+    "expected": "<video><source></video>"
+  },
+  {
+    "name": "Object data javascript",
+    "input": "<object data='javascript:alert(1)'></object>",
+    "expected": ""
+  },
+  {
+    "name": "JavaScript Link",
+    "input": "<a href='javascript:alert(1)'>Click</a>",
+    "expected": "<a>Click</a>"
+  },
+  {
+    "name": "Table Background JS",
+    "input": "<table background='javascript:alert(1)'>",
+    "expected": "<table></table>"
+  },
+  {
+    "name": "Form Action JS",
+    "input": "<form action='javascript:alert(1)'><input></form>",
+    "expected": "<form><input></form>"
+  },
+  {
+    "name": "VBScript Link",
+    "input": "<a href='vbscript:msgbox(1)'>Click</a>",
+    "expected": "<a>Click</a>"
+  },
+  {
+    "name": "Data URI Script",
+    "input": "<iframe src='data:text/html,<script>alert(1)</script>'></iframe>",
+    "expected": ""
+  },
+  {
+    "name": "Simple Iframe",
+    "input": "<iframe src='javascript:alert(1)'></iframe>",
+    "expected": ""
+  },
+  {
+    "name": "Iframe With Content",
+    "input": "Before <iframe src='evil.com'></iframe> After",
+    "expected": "Before  After"
+  },
+  {
+    "name": "Style Block",
+    "input": "Text <style>body{color:red}</style>",
+    "expected": "Text"
+  },
+  {
+    "name": "Style In Middle",
+    "input": "A <style>.x{display:none}</style> B",
+    "expected": "A  B"
+  },
+  {
+    "name": "SQL Single Quote",
+    "input": "What is 1' OR '1'='1?",
+    "expected": "What is 1' OR '1'='1?"
+  },
+  {
+    "name": "SQL Drop Table",
+    "input": "Question; DROP TABLE cards;--",
+    "expected": "Question; DROP TABLE cards;--"
+  },
+  {
+    "name": "SQL Union Select",
+    "input": "' UNION SELECT password FROM users--",
+    "expected": "' UNION SELECT password FROM users--"
+  },
+  {
+    "name": "Unicode Script",
+    "input": "<script>alert(1)</script>",
+    "expected": ""
+  },
+  {
+    "name": "HTML Entity Script",
+    "input": "&lt;script&gt;alert(1)&lt;/script&gt;",
+    "expected": "&lt;script&gt;alert(1)&lt;/script&gt;"
+  },
+  {
+    "name": "Null Byte Injection",
+    "input": "Hello\u0000<script>alert(1)</script>World",
+    "expected": "HelloWorld"
+  },
+  {
+    "name": "Zero Width Space",
+    "input": "Normal​text",
+    "expected": "Normal​text"
+  },
+  {
+    "name": "Double Curly",
+    "input": "{{7*7}}",
+    "expected": "{{7*7}}"
+  },
+  {
+    "name": "Dollar Expression",
+    "input": "${7*7}",
+    "expected": "${7*7}"
+  },
+  {
+    "name": "Path Traversal",
+    "input": "../../etc/passwd",
+    "expected": "../../etc/passwd"
+  },
+  {
+    "name": "Windows Path",
+    "input": "C:\\Windows\\System32\\cmd.exe",
+    "expected": "C:\\Windows\\System32\\cmd.exe"
+  },
+  {
+    "name": "Only Whitespace",
+    "input": "   \t\n   ",
+    "expected": ""
+  },
+  {
+    "name": "Whitespace Around Script",
+    "input": "   <script>alert(1)</script>   ",
+    "expected": ""
+  },
+  {
+    "name": "Tabs And Newlines",
+    "input": "Question\twith\ttabs\nand\nnewlines",
+    "expected": "Question\twith\ttabs\nand\nnewlines"
+  },
+  {
+    "name": "Safe Bold",
+    "input": "This is <b>Bold</b>",
+    "expected": "This is <b>Bold</b>"
+  },
+  {
+    "name": "Safe Italic",
+    "input": "This is <i>italic</i> text",
+    "expected": "This is <i>italic</i> text"
+  },
+  {
+    "name": "Safe Link",
+    "input": "<a href='https://google.com'>Google</a>",
+    "expected": "<a href=\"https://google.com\">Google</a>"
+  },
+  {
+    "name": "Safe Code Tag",
+    "input": "Use <code>console.log()</code> to debug",
+    "expected": "Use <code>console.log()</code> to debug"
+  },
+  {
+    "name": "Safe Strong Em",
+    "input": "<strong>Important</strong> and <em>emphasis</em>",
+    "expected": "<strong>Important</strong> and <em>emphasis</em>"
+  },
+  {
+    "name": "Math Expression",
+    "input": "What is 2 + 2 * (3 - 1)?",
+    "expected": "What is 2 + 2 * (3 - 1)?"
+  },
+  {
+    "name": "Apostrophe And Quotes",
+    "input": "It's a \"test\" with 'quotes'",
+    "expected": "It's a \"test\" with 'quotes'"
+  },
+  {
+    "name": "Non-ASCII Unicode",
+    "input": "Héllo Wörld — 日本語",
+    "expected": "Héllo Wörld — 日本語"
+  },
+  {
+    "name": "Emoji",
+    "input": "What does 🔥 mean in code reviews?",
+    "expected": "What does 🔥 mean in code reviews?"
+  },
+  {
+    "name": "Ampersand Entity",
+    "input": "Price is $9.99 & valid < 1 week!",
+    "expected": "Price is $9.99 &amp; valid &lt; 1 week!"
+  }
 ]

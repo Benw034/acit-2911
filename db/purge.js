@@ -11,6 +11,8 @@ export async function clearDatabase() {
     await client.query("DELETE FROM cards");
     await client.query("DELETE FROM decks");
     await client.query("DELETE FROM users");
+    await client.query("DELETE FROM session");
+    await client.query("DELETE FROM share_tokens");
 
     await client.query("COMMIT");
     console.log("Database tables cleared successfully.");

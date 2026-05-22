@@ -1,3 +1,4 @@
+DROP TABLE IF EXISTS share_tokens;
 DROP TABLE IF EXISTS card_choices;
 DROP TABLE IF EXISTS cards;
 DROP TABLE IF EXISTS decks;
@@ -24,12 +25,22 @@ CREATE TABLE cards (
   question TEXT NOT NULL,
   answer TEXT NOT NULL,
   card_type TEXT NOT NULL DEFAULT 'basic',
+  position INTEGER NOT NULL DEFAULT 0,
   creation_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
   CONSTRAINT valid_card_type CHECK (
-    card_type IN ('basic', 'multiple_choice', 'true_false')
+    card_type IN ('basic', 'multiple_choice')
   )
 );
+
+CREATE TABLE share_tokens (
+  token TEXT PRIMARY KEY,
+  deck_id TEXT NOT NULL REFERENCES decks(id) ON DELETE CASCADE,
+  created_by TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_share_tokens_deck_id ON share_tokens(deck_id);
 
 CREATE TABLE card_choices (
   id TEXT PRIMARY KEY,

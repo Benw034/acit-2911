@@ -14,6 +14,7 @@ describe("Authentication API", () => {
   beforeEach(async () => {
     await pool.query("DELETE FROM card_choices");
     await pool.query("DELETE FROM cards");
+    await pool.query("DELETE FROM share_tokens");
     await pool.query("DELETE FROM decks");
     await cleanupTestUsers();
   });

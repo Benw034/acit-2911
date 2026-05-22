@@ -3,22 +3,31 @@ import assert from "node:assert/strict";
 import pool from "../db/pool.js"; 
 
 describe("Flashcard Logic (Database Version)", () => {
+  // Fixed test user ID — inserted once before tests, never changes
+  const TEST_USER_ID = "user-integration1-test-fixed";
 
   after(async () => {
-    await pool.end(); // Safely drains and kills all open pool connections
-    });
+    await pool.end();
+  });
 
-  // Reset database state to a clean template before EVERY single test run
   beforeEach(async () => {
-    // Wipes data in correct order to safely respect FOREIGN KEY cascades
+    // Wipes data in correct order respecting foreign key cascades
     await pool.query("DELETE FROM card_choices");
     await pool.query("DELETE FROM cards");
+    await pool.query("DELETE FROM share_tokens");
     await pool.query("DELETE FROM decks");
+    await pool.query("DELETE FROM session");
+    await pool.query("DELETE FROM users WHERE id = $1", [TEST_USER_ID]);
 
-    // Reseed our baseline 'deck-1' row to mimic your old test state
+    // Seed a minimal test user so deck foreign keys resolve
     await pool.query(
-      `INSERT INTO decks (id, title, category) VALUES ($1, $2, $3)`,
-      ['deck-1', 'JavaScript Basics', 'Programming']
+      "INSERT INTO users (id, username, password_hash) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING",
+      [TEST_USER_ID, "integration1-user", "$2b$12$placeholder"]
+    );
+
+    await pool.query(
+      `INSERT INTO decks (id, user_id, title, category) VALUES ($1, $2, $3, $4)`,
+      ['deck-1', TEST_USER_ID, 'JavaScript Basics', 'Programming']
     );
 
     await pool.query(
@@ -115,8 +124,8 @@ describe("Flashcard Logic (Database Version)", () => {
     it("filters decks by category correctly", async () => {
       // Seed secondary variant row directly into current run sandbox state
       await pool.query(
-        `INSERT INTO decks (id, title, category) VALUES ($1, $2, $3)`,
-        ['deck-2', 'Test', 'Math']
+        `INSERT INTO decks (id, user_id, title, category) VALUES ($1, $2, $3, $4)`,
+        ['deck-2', TEST_USER_ID, 'Test', 'Math']
       );
       
       // Perform database filtering using standard SQL WHERE constraints

@@ -12,7 +12,7 @@
     "db:init": "node db/init-db.js",
     "db:test": "node db/test-db.js",
     "pretest": "npm run db:init",
-    "test": "node --test --test-concurrency=1 tests/*.test.js",
+    "test": "node --test --test-concurrency=1 tests/*_test.js",
     "seed": "node db/seed.js",
     "purge": "node db/purge.js",
     "export": "node db/export.js",

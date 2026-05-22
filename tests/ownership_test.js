@@ -14,7 +14,7 @@ import { cleanupTestUsers } from "./helpers.js";
  */
 async function makeUser(username) {
   const password = `${username}pass`;
-  const hash = await bcrypt.hash(password, 12);
+  const hash = await bcrypt.hash(password, 1);
   const id = "user-" + uuidv4();
   await pool.query(
     `INSERT INTO users (id, username, password_hash) VALUES ($1, $2, $3)`,
@@ -36,6 +36,7 @@ describe("Ownership and Auth Protection", () => {
   beforeEach(async () => {
     await pool.query("DELETE FROM card_choices");
     await pool.query("DELETE FROM cards");
+    await pool.query("DELETE FROM share_tokens");
     await pool.query("DELETE FROM decks");
     await cleanupTestUsers();
 

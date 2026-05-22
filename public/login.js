@@ -57,7 +57,9 @@ async function doLogin() {
       return;
     }
 
-    window.location.href = '/';
+    const params = new URLSearchParams(window.location.search);
+    const redirect = params.get('redirect');
+    window.location.href = redirect || '/';
   } catch (err) {
     showError('login', 'Network error - try again');
   }
@@ -92,7 +94,9 @@ async function doRegister() {
       return;
     }
 
-    window.location.href = '/';
+    const params = new URLSearchParams(window.location.search);
+    const redirect = params.get('redirect');
+    window.location.href = redirect || '/';
   } catch (err) {
     showError('register', 'Network error - try again');
   }

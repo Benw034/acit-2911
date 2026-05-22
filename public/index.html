@@ -9,13 +9,15 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;1,600&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
   <script>
     (function () {
-      const savedTheme = localStorage.getItem('theme');
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      
-      if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
+      const saved = localStorage.getItem('theme') || 'light';
+      document.documentElement.setAttribute('data-theme', saved);
+      document.body && document.body.setAttribute('data-theme', saved);
+      if (new URLSearchParams(window.location.search).has('token')) {
+        document.addEventListener('DOMContentLoaded', () => {
+          document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+          const lv = document.getElementById('shared-loading-view');
+          if (lv) lv.classList.add('active');
+        });
       }
     })();
   </script>
@@ -95,10 +97,16 @@
           </button>
         </div>
         <a href="/ai.html"
+        <button onclick="openNewDeckModal()"
+          class="flex items-center gap-2 bg-stone-900 text-white text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-stone-700 transition-colors">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          New Deck
+        </button>
+        <button onclick="openAiPanel()"
           class="flex items-center gap-2 bg-stone-900 text-white text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-stone-700 transition-colors">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
           AI Card Generator
-        </a>
+        </button>
 	<div class="flex items-center gap-2 text-xs font-medium text-stone-500">
           <span>Logged in as <strong id="user-display" class="text-stone-700">…</strong></span>
           <button onclick="doLogout()"
@@ -159,42 +167,79 @@
           <div class="card-face card-back absolute inset-0 bg-stone-900 rounded-2xl shadow-sm flex flex-col justify-center items-center px-12 py-10 text-center">
             <span class="absolute top-5 left-6 text-xs font-semibold tracking-widest text-stone-500 uppercase">Answer</span>
             <p id="card-answer" class="text-xl leading-relaxed text-stone-100"></p>
+            <div id="self-assess-btns" class="hidden absolute bottom-5 right-5 flex gap-2">
+              <button onclick="selfAssess(false); event.stopPropagation();"
+                class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/20 text-red-300 text-xs font-semibold hover:bg-red-500/40 transition-colors">
+                ✗ Missed it
+              </button>
+              <button onclick="selfAssess(true); event.stopPropagation();"
+                class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-500/20 text-green-300 text-xs font-semibold hover:bg-green-500/40 transition-colors">
+                ✓ Got it
+              </button>
+            </div>
             <span class="absolute bottom-5 left-6 text-xs text-stone-600">Click to flip</span>
           </div>
           <div class="invisible px-12 py-10" style="min-height:280px"></div>
         </div>
       </div>
 
-      <!-- Edit / Delete -->
-      <div class="flex justify-center gap-3 mb-8">
-        <button onclick="openEditCardModal()"
-          class="flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg border border-stone-200 bg-white hover:border-stone-400 transition-colors">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-          Edit
-        </button>
-        <button onclick="deleteCurrentCard()"
-          class="flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg border border-transparent text-red-500 hover:bg-red-50 hover:border-red-200 transition-colors">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
-          Delete
-        </button>
+      <!-- MCQ Browse View -->
+      <div id="mcq-view" class="hidden mb-6">
+        <div class="mcq-card">
+          <div class="mcq-card__front" onclick="flipMcqCard()">
+            <span class="mcq-card__label">Question</span>
+            <p id="mcq-question" class="mcq-card__text"></p>
+            <span class="mcq-card__hint">Click to see choices</span>
+          </div>
+          <div class="mcq-card__back" onclick="flipMcqCard()">
+            <span class="mcq-card__label mcq-card__label--back">Choices</span>
+            <div id="mcq-choices-display" class="mcq-choices-display"></div>
+            <span class="mcq-card__hint mcq-card__hint--back">Click to flip</span>
+          </div>
+          <div class="mcq-card__spacer"></div>
+        </div>
       </div>
 
-      <!-- Prev / Add / Next -->
-      <div class="flex justify-center items-center gap-3">
+      <!-- Quiz Widget -->
+      <div id="quiz-widget" class="hidden mb-6">
+        <div class="quiz-card">
+          <p id="quiz-question" class="quiz-card__question"></p>
+          <div id="quiz-choices" class="quiz-choices"></div>
+          <p id="quiz-feedback" class="quiz-feedback hidden"></p>
+        </div>
+      </div>
+
+      <!-- Prev / Next -->
+      <div class="flex justify-between items-center gap-3 mb-4">
         <button id="prev-btn" onclick="navigateCards('prev')"
           class="flex items-center gap-1.5 text-sm font-medium px-5 py-2.5 rounded-xl border border-stone-200 bg-white hover:border-stone-400 transition-colors min-w-[7rem] justify-center">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
           Previous
         </button>
-        <button onclick="openAddCardModal()"
-          class="flex items-center gap-2 text-sm font-semibold px-5 py-2.5 rounded-xl bg-stone-900 text-white hover:bg-stone-700 transition-colors">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Add Card
-        </button>
+        <span id="quiz-unanswered-label" class="hidden text-xs font-semibold px-3 py-1.5 rounded-full bg-red-500 text-white text-center whitespace-nowrap"></span>
         <button id="next-btn" onclick="navigateCards('next')"
           class="flex items-center gap-1.5 text-sm font-medium px-5 py-2.5 rounded-xl border border-stone-200 bg-white hover:border-stone-400 transition-colors min-w-[7rem] justify-center">
           Next
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+
+      <!-- Edit / Delete / Add — hidden in quiz mode -->
+      <div id="card-action-btns" class="flex justify-center gap-3">
+        <button onclick="deleteCurrentCard()"
+          class="flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg border border-transparent text-red-500 hover:bg-red-50 hover:border-red-200 transition-colors">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+          Delete
+        </button>
+        <button onclick="openEditCardModal()"
+          class="flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg border border-stone-200 bg-white hover:border-stone-400 transition-colors">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Edit
+        </button>
+        <button onclick="openAddCardModal()"
+          class="flex items-center gap-2 text-sm font-semibold px-5 py-2.5 rounded-xl bg-stone-900 text-white hover:bg-stone-700 transition-colors">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Card
         </button>
       </div>
     </div>
@@ -329,6 +374,20 @@
         <button id="csv-import-btn" onclick="submitCsv()" disabled
           class="px-4 py-2 text-sm font-semibold rounded-xl bg-stone-900 text-white hover:bg-stone-700 transition-colors">
           Import
+  <!-- Share Deck -->
+  <div id="share-modal" class="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/40 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-200">
+    <div id="share-modal-box" class="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl translate-y-4 transition-transform duration-200">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-bold">Share Deck</h2>
+        <button onclick="closeShareModal()" class="text-stone-400 hover:text-stone-700 w-7 h-7 flex items-center justify-center rounded-lg hover:bg-stone-100 transition-colors">✕</button>
+      </div>
+      <p class="text-sm text-stone-500 mb-3">Anyone with this link can view this deck or make a copy.</p>
+      <div class="flex gap-2">
+        <input id="share-url-input" type="text" readonly
+          class="flex-1 px-3.5 py-2.5 rounded-xl border border-stone-200 bg-stone-50 text-sm text-stone-700 focus:outline-none focus:border-stone-800" />
+        <button onclick="copyShareLink()"
+          class="px-4 py-2.5 bg-stone-900 text-white text-sm font-semibold rounded-xl hover:bg-stone-700 transition-colors shrink-0">
+          Copy
         </button>
       </div>
     </div>
@@ -341,6 +400,243 @@
   <audio id="background-music" loop>
   <source src="/audio/music.mp3" type="audio/mpeg" />
   </audio>
+
+  <!-- AI Card Generator Panel -->
+  <div id="ai-modal" class="fixed inset-0 z-40 flex items-center justify-center bg-black/40 opacity-0 pointer-events-none transition-opacity duration-200" style="display:none">
+    <div id="ai-modal-box" class="bg-white rounded-2xl shadow-2xl w-full max-w-xl mx-4 max-h-[90vh] flex flex-col translate-y-4 transition-transform duration-200">
+
+      <!-- Header -->
+      <div class="flex items-center justify-between px-6 pt-5 pb-4 border-b border-stone-100 shrink-0">
+        <h2 id="ai-panel-title" class="text-lg font-bold tracking-tight">AI Card Generator</h2>
+        <button onclick="closeAiPanel()" class="text-stone-400 hover:text-stone-700 transition-colors">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <!-- Scrollable body -->
+      <div class="overflow-y-auto flex-1 px-6 py-5 space-y-4">
+
+        <!-- Phase 1: Prompt + options -->
+        <div id="ai-prompt-phase">
+          <label class="block text-sm font-semibold mb-2">Topic or instructions</label>
+          <textarea id="ai-prompt-input" rows="3"
+            placeholder="e.g. Key events of the French Revolution, or JavaScript closures with examples."
+            class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-stone-50 text-sm focus:outline-none focus:border-stone-800 focus:bg-white transition-colors resize-none"></textarea>
+
+          <!-- Stream output (hidden until generating) -->
+          <div id="ai-stream-wrap" class="hidden mt-3">
+            <pre id="ai-stream-raw" class="text-xs font-mono leading-relaxed text-stone-500 whitespace-pre-wrap break-words max-h-32 overflow-y-auto rounded-xl bg-stone-50 border border-stone-200 p-3"></pre>
+          </div>
+
+          <!-- Options row -->
+          <div class="flex flex-wrap items-end gap-3 mt-4">
+            <!-- Model dropdown -->
+            <div class="flex-1 min-w-[10rem]">
+              <label class="block text-xs font-semibold text-stone-500 mb-1.5">Model</label>
+              <select id="ai-model-select" class="w-full px-3 py-2 rounded-xl border border-stone-200 bg-stone-50 text-sm focus:outline-none focus:border-stone-800">
+                <option value="">Loading…</option>
+              </select>
+            </div>
+            <!-- Card count -->
+            <div>
+              <label class="block text-xs font-semibold text-stone-500 mb-1.5">Cards</label>
+              <input id="ai-card-count" type="number" value="5" min="1" max="20"
+                class="w-20 px-3 py-2 rounded-xl border border-stone-200 bg-stone-50 text-sm focus:outline-none focus:border-stone-800">
+            </div>
+            <!-- Card type -->
+            <div>
+              <label class="block text-xs font-semibold text-stone-500 mb-1.5">Type</label>
+              <select id="ai-card-type" class="px-3 py-2 rounded-xl border border-stone-200 bg-stone-50 text-sm focus:outline-none focus:border-stone-800">
+                <option value="basic">Basic</option>
+                <option value="true_false">True / False</option>
+                <option value="multiple_choice">MCQ</option>
+                <option value="random">Random</option>
+              </select>
+            </div>
+            <!-- Generate button -->
+            <button id="ai-generate-btn" onclick="sendAiPrompt()"
+              class="flex items-center gap-2 px-4 py-2 rounded-xl bg-stone-900 text-white text-sm font-semibold hover:bg-stone-700 transition-colors shrink-0">
+              <span id="ai-btn-idle" class="flex items-center gap-2">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                Generate
+              </span>
+              <span id="ai-btn-busy" class="hidden flex items-center gap-2">
+                <span class="ai-spinner"></span>
+                <span id="ai-busy-label">0.0s</span>
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Phase 2: Card carousel (hidden until cards are ready) -->
+        <div id="ai-carousel-phase" class="hidden">
+          <p id="ai-card-counter" class="text-center text-xs text-stone-400 mb-3"></p>
+
+          <!-- Flip card — reuses existing card CSS -->
+          <div style="perspective:1200px" onclick="aiFlipCard()">
+            <div id="ai-flashcard-inner" class="relative w-full cursor-pointer"
+              style="transform-style:preserve-3d; transition:transform .5s cubic-bezier(.4,.2,.2,1); min-height:220px;">
+              <!-- Front -->
+              <div class="card-face absolute inset-0 bg-white border border-stone-200 rounded-2xl shadow-sm flex flex-col justify-center items-center px-10 py-8 text-center">
+                <span class="absolute top-4 left-5 text-xs font-semibold tracking-widest text-stone-300 uppercase">Question</span>
+                <p id="ai-card-question" class="text-lg leading-relaxed text-stone-800"></p>
+                <span class="absolute bottom-4 left-5 text-xs text-stone-300">Click to flip</span>
+              </div>
+              <!-- Back -->
+              <div class="card-face card-back absolute inset-0 bg-stone-900 rounded-2xl shadow-sm flex flex-col justify-center items-center px-10 py-8 text-center">
+                <span class="absolute top-4 left-5 text-xs font-semibold tracking-widest text-stone-500 uppercase">Answer</span>
+                <p id="ai-card-answer" class="text-lg leading-relaxed text-stone-100"></p>
+                <span class="absolute bottom-4 left-5 text-xs text-stone-600">Click to flip</span>
+              </div>
+              <!-- Spacer -->
+              <div class="invisible px-10 py-8" style="min-height:220px"></div>
+            </div>
+          </div>
+
+          <!-- Prev / Next -->
+          <div class="flex justify-between items-center mt-3">
+            <button id="ai-prev-btn" onclick="aiNavigate('prev')"
+              class="px-4 py-2 text-xs font-medium border border-stone-200 rounded-lg bg-white hover:border-stone-400 transition-colors disabled:opacity-35" disabled>← Prev</button>
+            <button id="ai-next-btn" onclick="aiNavigate('next')"
+              class="px-4 py-2 text-xs font-medium border border-stone-200 rounded-lg bg-white hover:border-stone-400 transition-colors disabled:opacity-35" disabled>Next →</button>
+          </div>
+        </div>
+
+        <!-- Phase 3: Save panel (hidden until cards ready, hidden again after save) -->
+        <div id="ai-save-phase" class="hidden border-t border-stone-100 pt-4 space-y-3">
+          <p class="text-xs font-semibold text-stone-500 uppercase tracking-wider">Save to deck</p>
+          <div class="flex gap-3 items-center">
+            <select id="ai-deck-select" class="flex-1 px-3 py-2 rounded-xl border border-stone-200 bg-white text-sm focus:outline-none focus:border-stone-800">
+              <option value="">Loading decks…</option>
+            </select>
+            <button id="ai-save-btn" onclick="saveAiCards()"
+              class="shrink-0 px-4 py-2 rounded-xl bg-stone-900 text-white text-sm font-semibold hover:bg-stone-700 transition-colors disabled:opacity-35">
+              Save
+            </button>
+          </div>
+          <!-- New deck row -->
+          <div id="ai-new-deck-row" class="hidden space-y-2">
+            <input id="ai-new-deck-title" type="text" placeholder="New deck name…" maxlength="50"
+              class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-stone-50 text-sm focus:outline-none focus:border-stone-800">
+            <input id="ai-new-deck-category" type="text" placeholder="Category (optional)"
+              class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-stone-50 text-sm focus:outline-none focus:border-stone-800">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SHARED DECK LOADING STATE -->
+  <div id="shared-loading-view" class="view max-w-2xl mx-auto px-6 py-24 text-center">
+    <p class="text-stone-400 text-sm">Loading deck…</p>
+  </div>
+
+  <!-- SHARED DECK LANDING VIEW -->
+  <div id="shared-landing-view" class="view relative max-w-2xl mx-auto px-6 py-16 text-center">
+    <button onclick="sharedGoHome()" class="absolute top-6 left-6 flex items-center gap-1.5 text-sm text-stone-400 hover:text-stone-700 transition-colors font-medium">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      Home
+    </button>
+    <p class="text-xs font-semibold tracking-widest uppercase text-stone-400 mb-8">Flashcards</p>
+    <h1 id="shared-deck-title" class="text-5xl tracking-tight mb-3" style="font-family:'Playfair Display',serif"></h1>
+    <p id="shared-deck-creator" class="text-sm text-stone-400 mb-6"></p>
+    <div id="shared-deck-stats" class="flex flex-wrap justify-center gap-2 mb-4"></div>
+    <div id="shared-deck-categories" class="flex flex-wrap justify-center gap-2 mb-10"></div>
+    <div class="flex justify-center gap-4">
+      <button id="shared-save-btn" onclick="sharedSaveCopy()"
+        class="flex items-center gap-2 px-6 py-3 rounded-xl border border-stone-200 bg-white text-stone-700 text-sm font-semibold hover:border-stone-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:border-stone-200">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Save a copy
+      </button>
+      <button onclick="sharedStartQuiz()"
+        class="flex items-center gap-2 px-6 py-3 rounded-xl bg-stone-900 text-white text-sm font-semibold hover:bg-stone-700 transition-colors">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+        Start Quiz
+      </button>
+    </div>
+  </div>
+
+  <!-- SHARED DECK QUIZ VIEW -->
+  <div id="shared-quiz-view" class="view max-w-2xl mx-auto px-6 py-12">
+    <div class="mb-6">
+      <button onclick="showView('shared-landing-view')"
+        class="flex items-center gap-1.5 text-sm text-stone-400 hover:text-stone-700 transition-colors font-medium">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        Back
+      </button>
+    </div>
+    <h1 id="shared-quiz-title" class="text-4xl text-center tracking-tight mb-1" style="font-family:'Playfair Display',serif"></h1>
+    <p id="shared-quiz-counter" class="text-center text-sm text-stone-400 mb-6"></p>
+    <div class="h-1 bg-stone-100 rounded-full mb-8 overflow-hidden">
+      <div id="shared-progress-fill" class="h-full bg-stone-800 rounded-full transition-all duration-300" style="width:0%"></div>
+    </div>
+    <!-- Basic card flip -->
+    <div id="shared-flip-wrapper" class="hidden relative mb-6 cursor-pointer" style="perspective:1200px" onclick="sharedFlipCard()">
+      <div id="shared-flashcard-inner" class="relative w-full">
+        <div class="card-face absolute inset-0 bg-white border border-stone-200 rounded-2xl shadow-sm flex flex-col justify-center items-center px-12 py-10 text-center">
+          <span class="absolute top-5 left-6 text-xs font-semibold tracking-widest text-stone-300 uppercase">Question</span>
+          <p id="shared-card-question" class="text-xl leading-relaxed"></p>
+          <span class="absolute bottom-5 left-6 text-xs text-stone-300">Click to flip</span>
+        </div>
+        <div class="card-face card-back absolute inset-0 bg-stone-900 rounded-2xl shadow-sm flex flex-col justify-center items-center px-12 py-10 text-center">
+          <span class="absolute top-5 left-6 text-xs font-semibold tracking-widest text-stone-500 uppercase">Answer</span>
+          <p id="shared-card-answer" class="text-xl leading-relaxed"></p>
+          <div class="absolute bottom-5 right-5 flex gap-2">
+            <button onclick="sharedSelfAssess(false); event.stopPropagation();"
+              class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/20 text-red-300 text-xs font-semibold hover:bg-red-500/40 transition-colors">
+              ✗ Missed it
+            </button>
+            <button onclick="sharedSelfAssess(true); event.stopPropagation();"
+              class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-500/20 text-green-300 text-xs font-semibold hover:bg-green-500/40 transition-colors">
+              ✓ Got it
+            </button>
+          </div>
+          <span class="absolute bottom-5 left-6 text-xs text-stone-600">Click to flip</span>
+        </div>
+        <div class="invisible px-12 py-10" style="min-height:280px"></div>
+      </div>
+    </div>
+    <!-- MCQ quiz widget -->
+    <div id="shared-quiz-widget" class="hidden mb-6">
+      <div class="quiz-card">
+        <p id="shared-quiz-question" class="quiz-card__question"></p>
+        <div id="shared-quiz-choices" class="quiz-choices"></div>
+        <p id="shared-quiz-feedback" class="quiz-feedback hidden"></p>
+      </div>
+    </div>
+    <!-- Prev / Next -->
+    <div class="flex justify-between items-center gap-3">
+      <button id="shared-prev-btn" onclick="sharedNavigate('prev')"
+        class="flex items-center gap-1.5 text-sm font-medium px-5 py-2.5 rounded-xl border border-stone-200 bg-white hover:border-stone-400 transition-colors min-w-[7rem] justify-center">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        Previous
+      </button>
+      <span id="shared-unanswered-label" class="hidden text-xs font-semibold px-3 py-1.5 rounded-full bg-red-500 text-white text-center whitespace-nowrap"></span>
+      <button id="shared-next-btn" onclick="sharedNavigate('next')"
+        class="flex items-center gap-1.5 text-sm font-medium px-5 py-2.5 rounded-xl border border-stone-200 bg-white hover:border-stone-400 transition-colors min-w-[7rem] justify-center">
+        Next
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Quiz score popup -->
+  <div id="quiz-score-popup" class="fixed inset-0 hidden items-center justify-center bg-black/40 z-50">
+    <div class="bg-white rounded-2xl shadow-xl p-6 w-80 text-center">
+      <h2 class="text-xl font-bold text-stone-900 mb-2">Quiz Finished!</h2>
+      <p id="quiz-score-text" class="text-stone-700 mb-4"></p>
+      <div class="flex gap-3 justify-center">
+        <button onclick="restartQuiz(false)"
+          class="px-4 py-2 bg-stone-900 text-white rounded-xl font-semibold hover:bg-stone-700 transition-colors">
+          Retest All
+        </button>
+        <button id="retest-wrong-btn" onclick="restartQuiz(true)"
+          class="px-4 py-2 border border-stone-900 text-stone-900 rounded-xl font-semibold hover:bg-stone-100 transition-colors">
+          Retest Wrong
+        </button>
+      </div>
+    </div>
+  </div>
 
   <script src="app.js"></script>
 </body>

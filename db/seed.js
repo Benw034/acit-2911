@@ -13,22 +13,23 @@ export async function seedDatabase() {
     const aliceHash = await bcrypt.hash("alicepass", 12);
     const bobHash = await bcrypt.hash("bobpass", 12);
 
-    const aliceId = "user-" + crypto.randomUUID();
-    const bobId = "user-" + crypto.randomUUID();
+    // Fixed IDs ensure exports stay valid across seed runs
+    const aliceId = "user-alice-fixed-id-000000000001";
+    const bobId   = "user-bob-fixed-id-0000000000001";
 
     await client.query(
-      `INSERT INTO users (id, username, password_hash) VALUES ($1, $2, $3)`,
+      `INSERT INTO users (id, username, password_hash) VALUES ($1, $2, $3) ON CONFLICT (username) DO NOTHING`,
       [aliceId, "alice", aliceHash]
     );
     await client.query(
-      `INSERT INTO users (id, username, password_hash) VALUES ($1, $2, $3)`,
+      `INSERT INTO users (id, username, password_hash) VALUES ($1, $2, $3) ON CONFLICT (username) DO NOTHING`,
       [bobId, "bob", bobHash]
     );
 
     // ========================================== DECK 1: WEB DEVELOPMENT
     const deck1Id = "deck-" + crypto.randomUUID();
     await client.query(
-      `INSERT INTO decks (id, user_id, title, category) VALUES ($1, $2, $3, $4)`,
+      `INSERT INTO decks (id, user_id, title, category) VALUES ($1, $2, $3, $4) ON CONFLICT (id) DO NOTHING`,
       [deck1Id, aliceId, "Web Development Essentials", "Programming"]
     );
 
@@ -53,9 +54,18 @@ export async function seedDatabase() {
       );
     }
 
+        const cardTf85 = "card-" + crypto.randomUUID();
     await client.query(
-      `INSERT INTO cards (id, deck_id, question, answer, card_type) VALUES ($1, $2, $3, $4, 'true_false')`,
-      ["card-" + crypto.randomUUID(), deck1Id, "JavaScript is a statically typed language.", "False"]
+      `INSERT INTO cards (id, deck_id, question, answer, card_type) VALUES ($1, $2, $3, $4, 'multiple_choice')`,
+      [cardTf85, deck1Id, "JavaScript is a statically typed language.", "false"]
+    );
+    await client.query(
+      `INSERT INTO card_choices (id, card_id, choice_text, is_correct) VALUES ($1, $2, $3, $4)`,
+      ["choice-" + crypto.randomUUID(), cardTf85, 'true', false]
+    );
+    await client.query(
+      `INSERT INTO card_choices (id, card_id, choice_text, is_correct) VALUES ($1, $2, $3, $4)`,
+      ["choice-" + crypto.randomUUID(), cardTf85, 'false', true]
     );
 
     await client.query(
@@ -79,15 +89,24 @@ export async function seedDatabase() {
       );
     }
 
+        const cardTf7653 = "card-" + crypto.randomUUID();
     await client.query(
-      `INSERT INTO cards (id, deck_id, question, answer, card_type) VALUES ($1, $2, $3, $4, 'true_false')`,
-      ["card-" + crypto.randomUUID(), deck1Id, "The HTTP 'OPTIONS' method is used to initiate a CORS preflight request.", "True"]
+      `INSERT INTO cards (id, deck_id, question, answer, card_type) VALUES ($1, $2, $3, $4, 'multiple_choice')`,
+      [cardTf7653, deck1Id, "The HTTP 'OPTIONS' method is used to initiate a CORS preflight request.", "true"]
+    );
+    await client.query(
+      `INSERT INTO card_choices (id, card_id, choice_text, is_correct) VALUES ($1, $2, $3, $4)`,
+      ["choice-" + crypto.randomUUID(), cardTf7653, 'true', true]
+    );
+    await client.query(
+      `INSERT INTO card_choices (id, card_id, choice_text, is_correct) VALUES ($1, $2, $3, $4)`,
+      ["choice-" + crypto.randomUUID(), cardTf7653, 'false', false]
     );
 
     // ========================================== DECK 2: WORLD HISTORY
     const deck2Id = "deck-" + crypto.randomUUID();
     await client.query(
-      `INSERT INTO decks (id, user_id, title, category) VALUES ($1, $2, $3, $4)`,
+      `INSERT INTO decks (id, user_id, title, category) VALUES ($1, $2, $3, $4) ON CONFLICT (id) DO NOTHING`,
       [deck2Id, aliceId, "World War II Trivia", "History"]
     );
 
@@ -112,9 +131,18 @@ export async function seedDatabase() {
       );
     }
 
+        const cardTf3926 = "card-" + crypto.randomUUID();
     await client.query(
-      `INSERT INTO cards (id, deck_id, question, answer, card_type) VALUES ($1, $2, $3, $4, 'true_false')`,
-      ["card-" + crypto.randomUUID(), deck2Id, "The United States joined WWII immediately following the invasion of Poland.", "False"]
+      `INSERT INTO cards (id, deck_id, question, answer, card_type) VALUES ($1, $2, $3, $4, 'multiple_choice')`,
+      [cardTf3926, deck2Id, "The United States joined WWII immediately following the invasion of Poland.", "false"]
+    );
+    await client.query(
+      `INSERT INTO card_choices (id, card_id, choice_text, is_correct) VALUES ($1, $2, $3, $4)`,
+      ["choice-" + crypto.randomUUID(), cardTf3926, 'true', false]
+    );
+    await client.query(
+      `INSERT INTO card_choices (id, card_id, choice_text, is_correct) VALUES ($1, $2, $3, $4)`,
+      ["choice-" + crypto.randomUUID(), cardTf3926, 'false', true]
     );
 
     await client.query(
@@ -138,15 +166,24 @@ export async function seedDatabase() {
       );
     }
 
+        const cardTf7046 = "card-" + crypto.randomUUID();
     await client.query(
-      `INSERT INTO cards (id, deck_id, question, answer, card_type) VALUES ($1, $2, $3, $4, 'true_false')`,
-      ["card-" + crypto.randomUUID(), deck2Id, "The Battle of Midway is widely considered the turning point of the war in the Pacific.", "True"]
+      `INSERT INTO cards (id, deck_id, question, answer, card_type) VALUES ($1, $2, $3, $4, 'multiple_choice')`,
+      [cardTf7046, deck2Id, "The Battle of Midway is widely considered the turning point of the war in the Pacific.", "true"]
+    );
+    await client.query(
+      `INSERT INTO card_choices (id, card_id, choice_text, is_correct) VALUES ($1, $2, $3, $4)`,
+      ["choice-" + crypto.randomUUID(), cardTf7046, 'true', true]
+    );
+    await client.query(
+      `INSERT INTO card_choices (id, card_id, choice_text, is_correct) VALUES ($1, $2, $3, $4)`,
+      ["choice-" + crypto.randomUUID(), cardTf7046, 'false', false]
     );
 
     // ========================================== DECK 3: ADVANCED POSTGRESQL
     const deck3Id = "deck-" + crypto.randomUUID();
     await client.query(
-      `INSERT INTO decks (id, user_id, title, category) VALUES ($1, $2, $3, $4)`,
+      `INSERT INTO decks (id, user_id, title, category) VALUES ($1, $2, $3, $4) ON CONFLICT (id) DO NOTHING`,
       [deck3Id, bobId, "Advanced PostgreSQL Internals", "Databases"]
     );
 
@@ -171,9 +208,18 @@ export async function seedDatabase() {
       );
     }
 
+        const cardTf1280 = "card-" + crypto.randomUUID();
     await client.query(
-      `INSERT INTO cards (id, deck_id, question, answer, card_type) VALUES ($1, $2, $3, $4, 'true_false')`,
-      ["card-" + crypto.randomUUID(), deck3Id, "Running VACUUM FULL always requires a full table lock.", "True"]
+      `INSERT INTO cards (id, deck_id, question, answer, card_type) VALUES ($1, $2, $3, $4, 'multiple_choice')`,
+      [cardTf1280, deck3Id, "Running VACUUM FULL always requires a full table lock.", "true"]
+    );
+    await client.query(
+      `INSERT INTO card_choices (id, card_id, choice_text, is_correct) VALUES ($1, $2, $3, $4)`,
+      ["choice-" + crypto.randomUUID(), cardTf1280, 'true', true]
+    );
+    await client.query(
+      `INSERT INTO card_choices (id, card_id, choice_text, is_correct) VALUES ($1, $2, $3, $4)`,
+      ["choice-" + crypto.randomUUID(), cardTf1280, 'false', false]
     );
 
     await client.query(
@@ -197,15 +243,24 @@ export async function seedDatabase() {
       );
     }
 
+        const cardTf7448 = "card-" + crypto.randomUUID();
     await client.query(
-      `INSERT INTO cards (id, deck_id, question, answer, card_type) VALUES ($1, $2, $3, $4, 'true_false')`,
-      ["card-" + crypto.randomUUID(), deck3Id, "The GIN (Generalized Inverted Index) type is suboptimal for full-text search indexing.", "False"]
+      `INSERT INTO cards (id, deck_id, question, answer, card_type) VALUES ($1, $2, $3, $4, 'multiple_choice')`,
+      [cardTf7448, deck3Id, "The GIN (Generalized Inverted Index) type is suboptimal for full-text search indexing.", "false"]
+    );
+    await client.query(
+      `INSERT INTO card_choices (id, card_id, choice_text, is_correct) VALUES ($1, $2, $3, $4)`,
+      ["choice-" + crypto.randomUUID(), cardTf7448, 'true', false]
+    );
+    await client.query(
+      `INSERT INTO card_choices (id, card_id, choice_text, is_correct) VALUES ($1, $2, $3, $4)`,
+      ["choice-" + crypto.randomUUID(), cardTf7448, 'false', true]
     );
 
     // ========================================== DECK 4: WEB SECURITY
     const deck4Id = "deck-" + crypto.randomUUID();
     await client.query(
-      `INSERT INTO decks (id, user_id, title, category) VALUES ($1, $2, $3, $4)`,
+      `INSERT INTO decks (id, user_id, title, category) VALUES ($1, $2, $3, $4) ON CONFLICT (id) DO NOTHING`,
       [deck4Id, bobId, "Web Application Security", "Cybersecurity"]
     );
 
@@ -230,9 +285,18 @@ export async function seedDatabase() {
       );
     }
 
+        const cardTf4832 = "card-" + crypto.randomUUID();
     await client.query(
-      `INSERT INTO cards (id, deck_id, question, answer, card_type) VALUES ($1, $2, $3, $4, 'true_false')`,
-      ["card-" + crypto.randomUUID(), deck4Id, "A Content Security Policy (CSP) can fully eliminate risk from XSS attacks when misconfigured.", "False"]
+      `INSERT INTO cards (id, deck_id, question, answer, card_type) VALUES ($1, $2, $3, $4, 'multiple_choice')`,
+      [cardTf4832, deck4Id, "A Content Security Policy (CSP) can fully eliminate risk from XSS attacks when misconfigured.", "false"]
+    );
+    await client.query(
+      `INSERT INTO card_choices (id, card_id, choice_text, is_correct) VALUES ($1, $2, $3, $4)`,
+      ["choice-" + crypto.randomUUID(), cardTf4832, 'true', false]
+    );
+    await client.query(
+      `INSERT INTO card_choices (id, card_id, choice_text, is_correct) VALUES ($1, $2, $3, $4)`,
+      ["choice-" + crypto.randomUUID(), cardTf4832, 'false', true]
     );
 
     await client.query(
@@ -256,9 +320,18 @@ export async function seedDatabase() {
       );
     }
 
+        const cardTf3093 = "card-" + crypto.randomUUID();
     await client.query(
-      `INSERT INTO cards (id, deck_id, question, answer, card_type) VALUES ($1, $2, $3, $4, 'true_false')`,
-      ["card-" + crypto.randomUUID(), deck4Id, "Using parameterized queries natively protects database targets from classic SQL injection vectors.", "True"]
+      `INSERT INTO cards (id, deck_id, question, answer, card_type) VALUES ($1, $2, $3, $4, 'multiple_choice')`,
+      [cardTf3093, deck4Id, "Using parameterized queries natively protects database targets from classic SQL injection vectors.", "true"]
+    );
+    await client.query(
+      `INSERT INTO card_choices (id, card_id, choice_text, is_correct) VALUES ($1, $2, $3, $4)`,
+      ["choice-" + crypto.randomUUID(), cardTf3093, 'true', true]
+    );
+    await client.query(
+      `INSERT INTO card_choices (id, card_id, choice_text, is_correct) VALUES ($1, $2, $3, $4)`,
+      ["choice-" + crypto.randomUUID(), cardTf3093, 'false', false]
     );
 
     await client.query("COMMIT");
