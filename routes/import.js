@@ -188,4 +188,81 @@ router.post("/csv", requireAuth, upload.single("file"), async (req, res) => {
   }
 });
 
+/**
+ * POST /api/import/csv/parse
+ * Same multipart upload as /csv but returns parsed rows as JSON without writing to DB.
+ * Returns { rows: [{question, answer, card_type, choices, deck_title, deck_category}] }
+ */
+router.post("/csv/parse", requireAuth, upload.single("file"), async (req, res) => {
+  const tmpPath = req.file?.path;
+  try {
+    if (!req.file) return res.status(400).json({ error: "No CSV file uploaded" });
+
+    const fileContent = await fs.readFile(tmpPath, "utf-8");
+    const lines = fileContent.split(/\r?\n/).filter((l) => l.trim().length > 0);
+
+    if (lines.length <= 1) return res.status(400).json({ error: "CSV is empty or has no data rows" });
+
+    const headers = parseCsvLine(lines[0]).map((h) => h.toLowerCase().trim());
+    const idx = {
+      deckTitle:    headers.indexOf("deck_title"),
+      deckCategory: headers.indexOf("deck_category"),
+      cardType:     headers.indexOf("card_type"),
+      question:     headers.indexOf("question"),
+      answer:       headers.indexOf("answer"),
+      choices:      headers.indexOf("choices"),
+    };
+
+    const required = ["question", "answer"];
+    const missing = required.filter((h) => !headers.includes(h));
+    if (missing.length > 0) {
+      return res.status(400).json({ error: `Missing required columns: ${missing.join(", ")}` });
+    }
+
+    const rows = [];
+    for (let i = 1; i < lines.length; i++) {
+      const row = parseCsvLine(lines[i]);
+      if (row.length < 3) continue;
+      const rawQuestion = row[idx.question] ?? "";
+      const rawAnswer   = row[idx.answer]   ?? "";
+      if (!rawQuestion.trim() || !rawAnswer.trim()) continue;
+
+      const cardType = ["basic", "multiple_choice", "true_false"].includes((row[idx.cardType] ?? "").trim())
+        ? row[idx.cardType].trim() : "basic";
+      const rawChoices = idx.choices !== -1 ? (row[idx.choices] ?? "") : "";
+      const answerLower = rawAnswer.trim().toLowerCase();
+      let choices;
+      if (cardType === "multiple_choice" && rawChoices.trim()) {
+        choices = rawChoices.split("|").map((c) => c.trim()).filter(Boolean).map((c) => ({
+          choiceText: DOMPurify.sanitize(c, PURIFY_OPTS),
+          isCorrect: c.toLowerCase() === answerLower,
+        }));
+      } else if (cardType === "true_false") {
+        choices = [
+          { choiceText: "True",  isCorrect: answerLower === "true"  },
+          { choiceText: "False", isCorrect: answerLower === "false" },
+        ];
+      } else {
+        choices = [];
+      }
+
+      rows.push({
+        deck_title:    DOMPurify.sanitize((row[idx.deckTitle]    ?? "").trim(), PURIFY_OPTS),
+        deck_category: DOMPurify.sanitize((idx.deckCategory !== -1 ? (row[idx.deckCategory] ?? "") : "").trim(), PURIFY_OPTS),
+        question:      DOMPurify.sanitize(rawQuestion.trim(), PURIFY_OPTS),
+        answer:        DOMPurify.sanitize(rawAnswer.trim(),   PURIFY_OPTS),
+        card_type:     cardType,
+        choices,
+      });
+    }
+
+    res.json({ rows });
+  } catch (err) {
+    console.error("CSV parse error:", err);
+    res.status(500).json({ error: err.message || "Parse failed" });
+  } finally {
+    if (tmpPath) fs.unlink(tmpPath).catch(() => {});
+  }
+});
+
 export default router;

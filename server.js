@@ -614,6 +614,86 @@ app.post("/api/decks/:deckId/cards", requireAuth, async (req, res) => {
 });
 
 
+// Must be declared BEFORE /:cardId to prevent wildcard capture
+app.put("/api/decks/:deckId/cards/bulk", requireAuth, async (req, res) => {
+  const { deckId } = req.params;
+  const { cards = [] } = req.body;
+  const userId = req.session.userId;
+  const sanitizeOpts = { FORBID_TAGS: ["style", "script", "iframe"] };
+
+  const client = await pool.connect();
+  try {
+    const deckCheck = await client.query(
+      `SELECT id FROM decks WHERE id = $1 AND user_id = $2`,
+      [deckId, userId]
+    );
+    if (deckCheck.rows.length === 0) return res.status(404).json({ error: "Deck not found" });
+
+    await client.query("BEGIN");
+
+    const incomingIds = cards.filter(c => c.id).map(c => c.id);
+
+    if (incomingIds.length > 0) {
+      await client.query(
+        `DELETE FROM cards WHERE deck_id = $1 AND id <> ALL($2::text[])`,
+        [deckId, incomingIds]
+      );
+    } else {
+      await client.query(`DELETE FROM cards WHERE deck_id = $1`, [deckId]);
+    }
+
+    const savedCards = [];
+    for (let i = 0; i < cards.length; i++) {
+      const { id, question, answer, card_type, choices = [] } = cards[i];
+      const finalType = card_type === "true_false" ? "multiple_choice" : (["basic", "multiple_choice"].includes(card_type) ? card_type : "basic");
+      const cleanQ = DOMPurify.sanitize((question || "").trim(), sanitizeOpts);
+      const cleanA = DOMPurify.sanitize((answer || "").trim(), sanitizeOpts);
+      if (!cleanQ || !cleanA) continue;
+
+      let cardId;
+      if (id) {
+        const upd = await client.query(
+          `UPDATE cards SET question=$1, answer=$2, card_type=$3, position=$4
+           WHERE id=$5 AND deck_id=$6 RETURNING id`,
+          [cleanQ, cleanA, finalType, i, id, deckId]
+        );
+        if (upd.rows.length === 0) continue;
+        cardId = id;
+      } else {
+        cardId = `card-${uuidv4()}`;
+        await client.query(
+          `INSERT INTO cards (id, deck_id, question, answer, card_type, position)
+           VALUES ($1, $2, $3, $4, $5, $6)`,
+          [cardId, deckId, cleanQ, cleanA, finalType, i]
+        );
+      }
+
+      await client.query(`DELETE FROM card_choices WHERE card_id = $1`, [cardId]);
+      if ((finalType === "multiple_choice" || finalType === "true_false") && choices.length) {
+        for (const ch of choices) {
+          const cleanText = DOMPurify.sanitize((ch.choiceText || "").trim(), sanitizeOpts);
+          if (!cleanText) continue;
+          await client.query(
+            `INSERT INTO card_choices (id, card_id, choice_text, is_correct) VALUES ($1, $2, $3, $4)`,
+            [`choice-${uuidv4()}`, cardId, cleanText, !!ch.isCorrect]
+          );
+        }
+      }
+
+      savedCards.push({ id: cardId, position: i });
+    }
+
+    await client.query("COMMIT");
+    res.json({ success: true, count: savedCards.length });
+  } catch (err) {
+    await client.query("ROLLBACK");
+    console.error("Bulk card save error:", err);
+    res.status(500).json({ error: "Database error" });
+  } finally {
+    client.release();
+  }
+});
+
 app.put("/api/decks/:deckId/cards/:cardId", requireAuth, async (req, res) => {
   const { deckId, cardId } = req.params;
   const { question, answer, card_type = 'basic', choices = [] } = req.body;

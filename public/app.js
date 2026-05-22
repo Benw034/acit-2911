@@ -205,26 +205,31 @@ function renderGrid(decks = null) {
       ${categorySplit(d.category).length ? `<div class="flex flex-wrap gap-1"> ${categorySplit(d.category).map(category =>
         `<span class="inline-block text-xs font-medium bg-stone-100 text-stone-600 px-2.5 py-1 rounded-full"> ${esc(category)} </span> `).join('')} </div>` : '<span></span>' }
       <div class="flex items-center justify-between mt-auto pt-2">
-        <span class="text-sm text-stone-400">${d.cardCount} card${d.cardCount !== 1 ? 's' : ''}</span>
-        <div class="flex items-center gap-1">
+        <span class="text-sm text-stone-400 shrink-0">${d.cardCount} card${d.cardCount !== 1 ? 's' : ''}</span>
+        <div class="flex items-center gap-0.5">
           <button onclick="openEditDeckModal(this.dataset.id, this.dataset.title, this.dataset.category)"
             data-id="${esc(d.id)}" data-title="${esc(d.title)}" data-category="${esc(d.category||'')}"
-            class="w-8 h-8 flex items-center justify-center rounded-lg text-stone-300 hover:text-stone-600 hover:bg-stone-100 transition-colors">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            class="w-6 h-6 flex items-center justify-center rounded-lg text-stone-300 hover:text-stone-600 hover:bg-stone-100 transition-colors">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           </button>
           <button onclick="deleteDeck('${d.id}')"
-            class="w-8 h-8 flex items-center justify-center rounded-lg text-stone-300 hover:text-red-500 hover:bg-red-50 transition-colors">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+            class="w-6 h-6 flex items-center justify-center rounded-lg text-stone-300 hover:text-red-500 hover:bg-red-50 transition-colors">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
           </button>
           <button onclick="shareDeck('${d.id}')"
-            class="w-8 h-8 flex items-center justify-center rounded-lg text-stone-300 hover:text-stone-600 hover:bg-stone-100 transition-colors"
+            class="w-6 h-6 flex items-center justify-center rounded-lg text-stone-300 hover:text-stone-600 hover:bg-stone-100 transition-colors"
             title="Share deck">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          </button>
+          <button data-id="${d.id}" data-title="${esc(d.title)}" onclick="openBulkEditorForDeck(this.dataset.id, this.dataset.title)"
+            class="w-6 h-6 flex items-center justify-center rounded-lg text-stone-300 hover:text-stone-600 hover:bg-stone-100 transition-colors"
+            title="Edit all cards">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
           </button>
           <button onclick="toggleShuffle('${d.id}')"
             title="${shuffledDeckIds.has(d.id) ? 'Shuffle on — click to disable' : 'Shuffle off — click to enable'}"
-            class="w-8 h-8 flex items-center justify-center rounded-lg transition-colors ${shuffledDeckIds.has(d.id) ? 'shuffle-selected text-stone-700 bg-stone-200 hover:text-stone-900 hover:bg-stone-300' : 'text-stone-300 hover:text-stone-600 hover:bg-stone-100'}">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            class="w-6 h-6 flex items-center justify-center rounded-lg transition-colors ${shuffledDeckIds.has(d.id) ? 'shuffle-selected text-stone-700 bg-stone-200 hover:text-stone-900 hover:bg-stone-300' : 'text-stone-300 hover:text-stone-600 hover:bg-stone-100'}">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/>
             </svg>
           </button>
@@ -899,6 +904,415 @@ document.getElementById('deck-title-input').addEventListener('keydown', e => {
   if (e.key === 'Enter') saveDeck();
 });
 
+// ── Bulk Card Editor ──────────────────────────────────────────────────────────
+
+let bulkDeckId = null;
+let bulkDirty = false;
+let bulkDragSrcIndex = null;
+
+function bulkMarkDirty() {
+  bulkDirty = true;
+  document.getElementById('bulk-dirty-indicator').classList.remove('hidden');
+  document.getElementById('bulk-close-btn').textContent = 'Cancel';
+}
+
+function bulkClearDirty() {
+  bulkDirty = false;
+  document.getElementById('bulk-dirty-indicator').classList.add('hidden');
+  document.getElementById('bulk-close-btn').textContent = 'Done';
+}
+
+function openBulkEditor(deckId, deckTitle, preloadedRows) {
+  bulkDeckId = deckId;
+  bulkDirty = false;
+  document.getElementById('bulk-editor-title').textContent = deckTitle || 'Edit Cards';
+  document.getElementById('bulk-dirty-indicator').classList.add('hidden');
+  renderBulkRows(preloadedRows || []);
+  openModal('bulk-editor');
+  // Focus first question if rows exist
+  const first = document.querySelector('#bulk-rows .bulk-q');
+  if (first) setTimeout(() => first.focus(), 120);
+}
+
+function inferCardType(cardType, choices) {
+  if (cardType !== 'multiple_choice') return cardType || 'basic';
+  if (choices?.length === 2) {
+    const texts = choices.map(ch => (ch.choiceText || '').toLowerCase()).sort();
+    if (texts[0] === 'false' && texts[1] === 'true') return 'true_false';
+  }
+  return 'multiple_choice';
+}
+
+async function openBulkEditorForDeck(deckId, deckTitle) {
+  const data = await api('GET', `/decks/${deckId}/cards`);
+  const rows = data.map(c => ({
+    id: c.id,
+    question: c.question,
+    answer: c.answer,
+    card_type: inferCardType(c.cardType, c.choices),
+    choices: c.choices || [],
+  }));
+  openBulkEditor(deckId, deckTitle, rows);
+}
+
+function closeBulkEditor() {
+  if (bulkDirty) {
+    if (!confirm('You have unsaved changes. Close anyway?')) return;
+  }
+  closeModal('bulk-editor');
+  bulkDeckId = null;
+  bulkDirty = false;
+}
+
+function bulkRowHtml(row, idx) {
+  const type = row.card_type || 'basic';
+  const isMcq = type === 'multiple_choice';
+  const isTf  = type === 'true_false';
+
+  const tfChoices = row.choices?.length ? row.choices : [
+    { choiceText: 'True',  isCorrect: false },
+    { choiceText: 'False', isCorrect: false },
+  ];
+
+  const rightCol = isMcq ? `
+    <div class="bulk-choices-wrap flex-1 flex flex-col gap-1.5 px-3 py-2 rounded-xl border border-stone-200 bg-stone-50 min-h-18">
+      ${(row.choices || []).map((ch, ci) => `
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="bulkToggleCorrect(${idx},${ci})"
+            class="w-4 h-4 rounded-full border-2 shrink-0 transition-colors ${ch.isCorrect ? 'bg-green-500 border-green-500' : 'border-stone-300'}"
+            title="Mark correct"></button>
+          <input type="text" value="${esc(ch.choiceText)}" placeholder="Choice…"
+            oninput="bulkChoiceChanged(${idx},${ci},this.value); bulkMarkDirty()"
+            onkeydown="bulkChoiceTabHandler(event,${idx},${ci})"
+            class="flex-1 min-w-0 bg-transparent text-sm focus:outline-none placeholder-stone-300" />
+          <button type="button" onclick="bulkDeleteChoice(${idx},${ci})"
+            class="text-stone-300 hover:text-red-500 transition-colors leading-none shrink-0">×</button>
+        </div>`).join('')}
+      <button type="button" onclick="bulkAddChoice(${idx})"
+        class="self-start text-xs text-stone-400 hover:text-stone-600 transition-colors mt-0.5">+ Add choice</button>
+    </div>` : isTf ? `
+    <div class="flex-1 flex flex-col gap-1.5 px-3 py-2 rounded-xl border border-stone-200 bg-stone-50 min-h-18">
+      ${tfChoices.map((ch, ci) => `
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="bulkToggleCorrect(${idx},${ci})"
+            class="w-4 h-4 rounded-full border-2 shrink-0 transition-colors ${ch.isCorrect ? 'bg-green-500 border-green-500' : 'border-stone-300'}"
+            title="Mark correct"></button>
+          <span class="text-sm text-stone-700">${esc(ch.choiceText)}</span>
+        </div>`).join('')}
+    </div>` :
+    `<textarea rows="2" placeholder="Answer…" data-row="${idx}" data-field="answer"
+      class="bulk-a flex-1 px-3 py-2 rounded-xl border border-stone-200 bg-stone-50 text-sm focus:outline-none focus:border-stone-800 focus:bg-white transition-colors resize-none"
+      oninput="bulkMarkDirty()"
+      onkeydown="bulkTabHandler(event,${idx},'answer')">${esc(row.answer || '')}</textarea>`;
+
+  const ICONS = {
+    basic: {
+      active:   `<circle cx="12" cy="12" r="8" fill="#22c55e"/>`,
+      inactive: `<circle cx="12" cy="12" r="8" fill="#d4d4d4"/>`,
+    },
+    true_false: {
+      active:   `<circle cx="7" cy="12" r="5" fill="#ef4444"/><circle cx="15" cy="12" r="5" fill="#22c55e"/>`,
+      inactive: `<circle cx="7" cy="12" r="5" fill="#d4d4d4"/><circle cx="15" cy="12" r="5" fill="#a8a29e"/>`,
+    },
+    multiple_choice: {
+      active:   `<circle cx="8" cy="16" r="5" fill="#ef4444"/><circle cx="16" cy="16" r="5" fill="#22c55e"/><circle cx="12" cy="9" r="5" fill="#3b82f6"/>`,
+      inactive: `<circle cx="8" cy="16" r="5" fill="#d4d4d4"/><circle cx="16" cy="16" r="5" fill="#d4d4d4"/><circle cx="12" cy="9" r="5" fill="#a8a29e"/>`,
+    },
+  };
+
+  const typBtn = (t, title) => {
+    const active = type === t;
+    const icon = ICONS[t][active ? 'active' : 'inactive'];
+    const cls = active
+      ? 'ring-1 ring-stone-300 bg-stone-50'
+      : 'hover:bg-stone-100';
+    return `<button type="button" onclick="bulkTypeChanged(${idx},'${t}')" title="${title}"
+      class="w-6 h-6 flex items-center justify-center rounded transition-colors ${cls}">
+      <svg width="14" height="14" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">${icon}</svg>
+    </button>`;
+  };
+
+  return `
+    <div class="bulk-row flex items-start gap-2" data-index="${idx}" draggable="true"
+      ondragstart="bulkDragStart(event,${idx})" ondragover="bulkDragOver(event,${idx})"
+      ondragend="bulkDragEnd(event)" ondrop="bulkDrop(event,${idx})">
+
+      <!-- Drag handle + position + type icons -->
+      <div class="flex flex-col items-center gap-1.5 pt-1.5 shrink-0">
+        <div class="flex flex-col items-center gap-0.5 select-none cursor-grab text-stone-300 hover:text-stone-500 transition-colors" title="Drag to reorder">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="5" r="1.5"/><circle cx="15" cy="5" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="19" r="1.5"/><circle cx="15" cy="19" r="1.5"/></svg>
+          <span class="text-[10px] font-medium leading-none">${idx + 1}</span>
+        </div>
+        <div class="flex items-center gap-0.5">
+          ${typBtn('basic',           'Basic')}
+          ${typBtn('true_false',      'True / False')}
+          ${typBtn('multiple_choice', 'Multiple choice')}
+        </div>
+      </div>
+
+      <!-- Question -->
+      <textarea rows="2" placeholder="Question…" data-row="${idx}" data-field="question"
+        class="bulk-q flex-1 px-3 py-2 rounded-xl border border-stone-200 bg-stone-50 text-sm focus:outline-none focus:border-stone-800 focus:bg-white transition-colors resize-none"
+        oninput="bulkMarkDirty()"
+        onkeydown="bulkTabHandler(event,${idx},'question')">${esc(row.question || '')}</textarea>
+      ${rightCol}
+      <button type="button" onclick="bulkDeleteRow(${idx})"
+        class="mt-1 w-6 h-6 shrink-0 flex items-center justify-center text-stone-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Delete card">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+      </button>
+    </div>`;
+}
+
+function renderBulkRows(rows) {
+  const container = document.getElementById('bulk-rows');
+  container.innerHTML = rows.map((r, i) => bulkRowHtml(r, i)).join('');
+  document.getElementById('bulk-editor-subtitle').textContent =
+    `${rows.length} card${rows.length !== 1 ? 's' : ''}`;
+  // Store row data on container for later reads
+  container._rows = rows.map(r => ({ ...r }));
+}
+
+function getBulkRows() {
+  const container = document.getElementById('bulk-rows');
+  const rowEls = container.querySelectorAll('.bulk-row');
+  return Array.from(rowEls).map((el, i) => {
+    const stored = container._rows?.[i] || {};
+    const q = el.querySelector('[data-field="question"]')?.value.trim() || '';
+    const a = el.querySelector('[data-field="answer"]')?.value.trim() || '';
+    return {
+      id: stored.id || null,
+      question: q,
+      answer: a,
+      card_type: stored.card_type || 'basic',
+      choices: stored.choices || [],
+    };
+  }).filter(r => r.question && r.answer);
+}
+
+function bulkAddRow() {
+  const container = document.getElementById('bulk-rows');
+  if (!container._rows) container._rows = [];
+  syncAllBulkRows(container);
+  const newRow = { question: '', answer: '', card_type: 'basic', choices: [] };
+  container._rows.push(newRow);
+  renderBulkRows(container._rows);
+  bulkMarkDirty();
+  // Focus the new question field
+  const allQ = container.querySelectorAll('.bulk-q');
+  setTimeout(() => allQ[allQ.length - 1]?.focus(), 30);
+}
+
+function bulkDeleteRow(idx) {
+  const container = document.getElementById('bulk-rows');
+  syncAllBulkRows(container);
+  container._rows.splice(idx, 1);
+  renderBulkRows(container._rows);
+  bulkMarkDirty();
+}
+
+function bulkTypeChanged(idx, newType) {
+  const container = document.getElementById('bulk-rows');
+  if (!container._rows[idx]) return;
+  syncAllBulkRows(container);
+  const row = container._rows[idx];
+  row.card_type = newType;
+
+  if (newType === 'true_false') {
+    const alreadyTf = row.choices?.length === 2 &&
+      row.choices.map(c => c.choiceText.toLowerCase()).sort().join() === 'false,true';
+    if (!alreadyTf) {
+      if (row.choices?.length) row._stashedChoices = row.choices;
+      const ansLower = (row.answer || '').toLowerCase();
+      row.choices = [
+        { choiceText: 'True',  isCorrect: ansLower === 'true'  },
+        { choiceText: 'False', isCorrect: ansLower === 'false' },
+      ];
+    }
+  } else if (newType === 'multiple_choice') {
+    if (row._stashedChoices?.length) {
+      row.choices = row._stashedChoices;
+      row._stashedChoices = null;
+    } else if (!row.choices?.length) {
+      const ans = (row.answer || '').trim();
+      row.choices = [
+        { choiceText: ans, isCorrect: !!ans },
+        { choiceText: '', isCorrect: false },
+      ];
+    }
+  }
+  // basic: leave choices intact so switching back to MCQ/TF restores them
+
+  renderBulkRows(container._rows);
+  bulkMarkDirty();
+}
+
+function bulkToggleCorrect(rowIdx, choiceIdx) {
+  const container = document.getElementById('bulk-rows');
+  syncAllBulkRows(container);
+  const choices = container._rows[rowIdx]?.choices || [];
+  choices.forEach((c, i) => { c.isCorrect = i === choiceIdx; });
+  renderBulkRows(container._rows);
+  bulkMarkDirty();
+}
+
+function bulkChoiceChanged(rowIdx, choiceIdx, value) {
+  const container = document.getElementById('bulk-rows');
+  if (container._rows[rowIdx]?.choices[choiceIdx]) {
+    container._rows[rowIdx].choices[choiceIdx].choiceText = value;
+  }
+}
+
+function bulkAddChoice(rowIdx) {
+  const container = document.getElementById('bulk-rows');
+  syncAllBulkRows(container);
+  container._rows[rowIdx].choices.push({ choiceText: '', isCorrect: false });
+  renderBulkRows(container._rows);
+  bulkMarkDirty();
+}
+
+function bulkDeleteChoice(rowIdx, choiceIdx) {
+  const container = document.getElementById('bulk-rows');
+  syncAllBulkRows(container);
+  container._rows[rowIdx].choices.splice(choiceIdx, 1);
+  renderBulkRows(container._rows);
+  bulkMarkDirty();
+}
+
+// Persist textarea values into _rows before re-rendering
+function syncBulkTextareas(container, rowIdx) {
+  const rowEl = container.querySelectorAll('.bulk-row')[rowIdx];
+  if (!rowEl || !container._rows[rowIdx]) return;
+  const row = container._rows[rowIdx];
+  row.question = rowEl.querySelector('[data-field="question"]')?.value || row.question;
+  if (row.card_type === 'multiple_choice' || row.card_type === 'true_false') {
+    // Answer is derived from whichever choice is marked correct
+    const correct = row.choices?.find(c => c.isCorrect);
+    row.answer = correct?.choiceText || row.answer;
+  } else {
+    row.answer = rowEl.querySelector('[data-field="answer"]')?.value || row.answer;
+  }
+}
+
+function syncAllBulkRows(container) {
+  (container._rows || []).forEach((_, i) => syncBulkTextareas(container, i));
+}
+
+function bulkTabHandler(e, rowIdx, field) {
+  if (e.key !== 'Tab' || e.shiftKey) return;
+  e.preventDefault();
+  const container = document.getElementById('bulk-rows');
+  const rowEl = container.querySelectorAll('.bulk-row')[rowIdx];
+  if (field === 'question') {
+    const rowType = container._rows?.[rowIdx]?.card_type;
+    if (rowType === 'multiple_choice') {
+      rowEl?.querySelector('.bulk-choices-wrap input[type="text"]')?.focus();
+    } else if (rowType === 'true_false') {
+      const nextRow = container.querySelectorAll('.bulk-row')[rowIdx + 1];
+      if (nextRow) { nextRow.querySelector('.bulk-q')?.focus(); } else { bulkAddRow(); }
+    } else {
+      rowEl?.querySelector('.bulk-a')?.focus();
+    }
+  } else {
+    const nextRow = container.querySelectorAll('.bulk-row')[rowIdx + 1];
+    if (nextRow) {
+      nextRow.querySelector('.bulk-q')?.focus();
+    } else {
+      bulkAddRow();
+    }
+  }
+}
+
+function bulkChoiceTabHandler(e, rowIdx, choiceIdx) {
+  if (e.key !== 'Tab' || e.shiftKey) return;
+  e.preventDefault();
+  const container = document.getElementById('bulk-rows');
+  const rowEl = container.querySelectorAll('.bulk-row')[rowIdx];
+  const inputs = rowEl?.querySelectorAll('.bulk-choices-wrap input[type="text"]');
+  if (inputs && choiceIdx < inputs.length - 1) {
+    inputs[choiceIdx + 1].focus();
+  } else {
+    const nextRow = container.querySelectorAll('.bulk-row')[rowIdx + 1];
+    if (nextRow) {
+      nextRow.querySelector('.bulk-q')?.focus();
+    } else {
+      bulkAddRow();
+    }
+  }
+}
+
+// Drag-and-drop reorder
+function bulkDragStart(e, idx) {
+  bulkDragSrcIndex = idx;
+  e.dataTransfer.effectAllowed = 'move';
+  e.currentTarget.classList.add('opacity-50');
+}
+
+function bulkDragOver(e, idx) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  const rect = e.currentTarget.getBoundingClientRect();
+  const insertBefore = e.clientY < rect.top + rect.height / 2;
+  document.querySelectorAll('.bulk-row').forEach((el, i) => {
+    const active = i === idx && idx !== bulkDragSrcIndex;
+    el.classList.toggle('border-t-2', active && insertBefore);
+    el.classList.toggle('border-b-2', active && !insertBefore);
+    el.classList.toggle('border-stone-400', active);
+  });
+}
+
+function bulkDragEnd(e) {
+  e.currentTarget.classList.remove('opacity-50');
+  document.querySelectorAll('.bulk-row').forEach(el => {
+    el.classList.remove('border-t-2', 'border-b-2', 'border-stone-400');
+  });
+}
+
+function bulkDrop(e, targetIdx) {
+  e.preventDefault();
+  if (bulkDragSrcIndex === null) return;
+  const rect = e.currentTarget.getBoundingClientRect();
+  const insertBefore = e.clientY < rect.top + rect.height / 2;
+  let insertAt = insertBefore ? targetIdx : targetIdx + 1;
+  // Adjust for the source being removed before insertion
+  if (bulkDragSrcIndex < insertAt) insertAt--;
+  if (bulkDragSrcIndex === insertAt) { bulkDragSrcIndex = null; return; }
+  const container = document.getElementById('bulk-rows');
+  syncAllBulkRows(container);
+  const rows = container._rows;
+  const [moved] = rows.splice(bulkDragSrcIndex, 1);
+  rows.splice(insertAt, 0, moved);
+  bulkDragSrcIndex = null;
+  renderBulkRows(rows);
+  bulkMarkDirty();
+}
+
+async function saveBulkEditor() {
+  if (!bulkDeckId) return;
+  const btn = document.getElementById('bulk-save-btn');
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+  try {
+    const container = document.getElementById('bulk-rows');
+    // Sync all textareas into _rows before reading
+    container.querySelectorAll('.bulk-row').forEach((el, i) => syncBulkTextareas(container, i));
+    const cards = (container._rows || [])
+      .filter(r => r.question?.trim() && r.answer?.trim())
+      .map(r => ({ ...r, card_type: r.card_type === 'true_false' ? 'multiple_choice' : r.card_type }));
+    await api('PUT', `/decks/${bulkDeckId}/cards/bulk`, { cards });
+    bulkClearDirty();
+    showToast('Saved ✓');
+    await loadDecks();
+    // Refresh subtitle count
+    document.getElementById('bulk-editor-subtitle').textContent =
+      `${cards.length} card${cards.length !== 1 ? 's' : ''}`;
+  } catch (e) {
+    showToast(e.message || 'Save failed');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Save';
+  }
+}
+
 //  Theme Palettes 
 const THEMES = {
   light:  { label: 'Light'  },
@@ -1016,15 +1430,20 @@ let musicVolume = 0;
 let sfxVolume = Number(sfxVolumeSlider.value) / 100;
 
 /* ADDED: Keep track of the last non-zero volume level. Default to 40% */
-let preMuteVolume = 40; 
+let preMuteVolume = 40;
+let preMuteSfxVolume = Number(sfxVolumeSlider.value);
 
 if (backgroundMusic) {
   backgroundMusic.volume = musicVolume;
 }
 
-if (volumeBtn) {
-  volumeBtn.textContent = "🔇";
+function updateVolumeBtn() {
+  if (!volumeBtn) return;
+  const bothMuted = musicVolumeSlider.value === "0" && sfxVolumeSlider.value === "0";
+  volumeBtn.textContent = bothMuted ? "🔇" : "🔊";
 }
+
+updateVolumeBtn();
 
 // SLIDER INTERACTION HANDLERS
 musicVolumeSlider.addEventListener("input", () => {
@@ -1035,45 +1454,40 @@ musicVolumeSlider.addEventListener("input", () => {
     backgroundMusic.volume = musicVolume;
   }
 
-  // Update our tracked non-zero volume variable whenever the slider moves
-  if (musicVolumeSlider.value !== "0") {
-    preMuteVolume = Number(musicVolumeSlider.value);
-  }
-
-  if (volumeBtn) {
-    if (musicVolumeSlider.value === "0") {
-      volumeBtn.textContent = "🔇";
-    } else {
-      volumeBtn.textContent = "🔊";
-    }
-  }
+  updateVolumeBtn();
 });
 
 sfxVolumeSlider.addEventListener("input", () => {
   sfxVolume = Number(sfxVolumeSlider.value) / 100;
   sfxValue.textContent = `${sfxVolumeSlider.value}%`;
+  updateVolumeBtn();
 });
 
 /* ADDED: Click handler for the volume button to toggle mute state */
 if (volumeBtn) {
   volumeBtn.addEventListener("click", () => {
-    if (musicVolumeSlider.value === "0") {
-      // Unmute: Restore to the last tracked non-zero volume level
+    if (musicVolumeSlider.value === "0" && sfxVolumeSlider.value === "0") {
+      // Unmute: restore both to pre-mute levels
       musicVolumeSlider.value = String(preMuteVolume);
-      volumeBtn.textContent = "🔊";
+      sfxVolumeSlider.value = String(preMuteSfxVolume);
+      sfxVolume = preMuteSfxVolume / 100;
+      sfxValue.textContent = `${preMuteSfxVolume}%`;
     } else {
-      // Mute: Save current position first, then drop to zero
+      // Mute both: snapshot current levels first
       preMuteVolume = Number(musicVolumeSlider.value);
+      preMuteSfxVolume = Number(sfxVolumeSlider.value);
       musicVolumeSlider.value = "0";
-      volumeBtn.textContent = "🔇";
+      sfxVolumeSlider.value = "0";
+      sfxVolume = 0;
+      sfxValue.textContent = "0%";
     }
-    
-    // Sync the underlying audio engine and text layouts to match the new value
+
     musicVolume = Number(musicVolumeSlider.value) / 100;
     musicValue.textContent = `${musicVolumeSlider.value}%`;
     if (backgroundMusic) {
       backgroundMusic.volume = musicVolume;
     }
+    updateVolumeBtn();
   });
 }
 
@@ -1141,7 +1555,28 @@ document.addEventListener('DOMContentLoaded', () => {
 // CSV Import
 let csvFile = null;
 
-const CSV_TEMPLATE = `deck_title,question,answer,deck_category,card_type,choices\nMy Deck,What is the capital of France?,Paris,Geography,basic,\nMy Deck,Which is a primary colour?,Red,Art,multiple_choice,Red|Blue|Yellow|Green`;
+const CSV_TEMPLATE = `Generate flashcard data as a CSV. Use exactly this header row, with no extra columns:
+
+question,answer,card_type,choices
+
+Column rules:
+- question  (required) — text shown on the front of the card
+- answer    (required) — the correct answer
+- card_type (optional, defaults to basic) — must be one of: basic, multiple_choice, true_false
+- choices   (optional) — for multiple_choice only: all options separated by | e.g. Paris|London|Rome|Berlin; one option must match the answer exactly and will be marked correct; leave empty for basic and true_false
+
+Card type rules:
+- basic          — standard front/back card; leave choices empty
+- multiple_choice — provide at least two pipe-separated choices; the choice matching answer is marked correct
+- true_false      — set answer to exactly True or False; leave choices empty
+
+Example rows:
+question,answer,card_type,choices
+What is the capital of France?,Paris,basic,
+Which is a primary colour?,Red,multiple_choice,Red|Blue|Yellow|Green
+The Earth is flat.,False,true_false,
+
+Do not include a deck_title column. Output only the CSV with no explanation.`;
 
 async function copyCsvSchema(btn) {
   try {
@@ -1166,10 +1601,24 @@ async function copyCsvSchema(btn) {
 function openCsvModal() {
   csvFile = null;
   document.getElementById('csv-file-input').value = '';
+  document.getElementById('csv-text-input').value = '';
   document.getElementById('csv-drop-label').textContent = 'Drop your CSV here or click to browse';
   document.getElementById('csv-result').classList.add('hidden');
   document.getElementById('csv-import-btn').disabled = true;
+
+  // Populate deck selector
+  const sel = document.getElementById('csv-deck-select');
+  sel.innerHTML = `<option value="__new__">+ New deck…</option>` +
+    allDecks.map(d => `<option value="${esc(d.id)}">${esc(d.title)}</option>`).join('');
+  sel.value = '__new__';
+  document.getElementById('csv-new-deck-row').classList.remove('hidden');
+
   openModal('csv-modal');
+}
+
+function csvDeckSelectChanged() {
+  const isNew = document.getElementById('csv-deck-select').value === '__new__';
+  document.getElementById('csv-new-deck-row').classList.toggle('hidden', !isNew);
 }
 
 function closeCsvModal() { closeModal('csv-modal'); }
@@ -1195,11 +1644,25 @@ function csvDrop(e) {
   if (file) setCsvFile(file);
 }
 
+function csvTextChanged() {
+  const text = document.getElementById('csv-text-input').value.trim();
+  if (text) {
+    csvFile = new File([text], 'pasted.csv', { type: 'text/csv' });
+    document.getElementById('csv-drop-label').textContent = 'Drop your CSV here or click to browse';
+    document.getElementById('csv-import-btn').disabled = false;
+    document.getElementById('csv-result').classList.add('hidden');
+  } else {
+    csvFile = null;
+    document.getElementById('csv-import-btn').disabled = true;
+  }
+}
+
 function setCsvFile(file) {
   if (!file.name.toLowerCase().endsWith('.csv')) {
     showCsvResult('Only .csv files are allowed', 'error');
     return;
   }
+  document.getElementById('csv-text-input').value = '';
   csvFile = file;
   document.getElementById('csv-drop-label').textContent = `✓ ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
   document.getElementById('csv-import-btn').disabled = false;
@@ -1222,35 +1685,71 @@ async function submitCsv() {
 
   const btn = document.getElementById('csv-import-btn');
   btn.disabled = true;
-  btn.textContent = 'Importing...';
+  btn.textContent = 'Parsing...';
   document.getElementById('csv-result').classList.add('hidden');
 
   try {
     const formData = new FormData();
     formData.append('file', csvFile);
 
-    const res = await fetch('/api/import/csv', { method: 'POST', body: formData });
+    const res = await fetch('/api/import/csv/parse', { method: 'POST', body: formData });
     const data = await res.json();
 
     if (!res.ok) {
-      showCsvResult(data.error || 'Import failed', 'error');
+      showCsvResult(data.error || 'Parse failed', 'error');
       return;
     }
 
-    showCsvResult(data.message, 'success');
-    showToast(`✓ ${data.message}`);
-    loadDecks();
-
-    if (data.errors && data.errors.length > 0) {
-      console.warn('CSV row errors:', data.errors);
+    if (!data.rows || data.rows.length === 0) {
+      showCsvResult('No valid rows found in CSV', 'error');
+      return;
     }
 
-    setTimeout(() => closeCsvModal(), 1800);
+    // Resolve target deck
+    let deckId = document.getElementById('csv-deck-select').value;
+    let deckTitle;
+    if (deckId === '__new__') {
+      const title = document.getElementById('csv-new-deck-title').value.trim();
+      if (!title) { showCsvResult('Enter a name for the new deck', 'error'); return; }
+      const newDeck = await api('POST', '/decks', { title });
+      await loadDecks();
+      deckId = newDeck.id;
+      deckTitle = title;
+    } else {
+      deckTitle = allDecks.find(d => d.id === deckId)?.title || 'Deck';
+    }
+
+    // Fetch existing cards so CSV rows are appended, not replacing them
+    let existingRows = [];
+    if (deckId) {
+      try {
+        const existing = await api('GET', `/decks/${deckId}/cards`);
+        existingRows = existing.map(c => ({
+          id: c.id,
+          question: c.question,
+          answer: c.answer,
+          card_type: inferCardType(c.cardType, c.choices),
+          choices: c.choices || [],
+        }));
+      } catch (_) {}
+    }
+
+    const csvRows = data.rows.map(r => ({
+      question: r.question,
+      answer: r.answer,
+      card_type: r.card_type || 'basic',
+      choices: r.choices || [],
+    }));
+
+    closeCsvModal();
+
+    openBulkEditor(deckId, deckTitle, [...existingRows, ...csvRows]);
+
   } catch (err) {
     showCsvResult('Network error — try again', 'error');
   } finally {
     btn.disabled = false;
-    btn.textContent = 'Import';
+    btn.textContent = 'Preview & Edit';
   }
 }
 
@@ -1686,15 +2185,17 @@ async function saveAiCards() {
       await loadDecks(); // Refresh home grid
     }
 
-    // Save each card using the existing route
-    for (const card of aiCards) {
-      await api('POST', `/decks/${deckId}/cards`, {
-        question: card.question,
-        answer: card.answer,
-        card_type: card.card_type || 'basic',
-        choices: card.choices || []
-      });
-    }
+    // Fetch existing cards so bulk endpoint can merge without deleting them
+    const existing = await api('GET', `/decks/${deckId}/cards`);
+    const newCards = aiCards.map(c => ({
+      question: c.question,
+      answer: c.answer,
+      card_type: c.card_type || 'basic',
+      choices: c.choices || [],
+    }));
+    await api('PUT', `/decks/${deckId}/cards/bulk`, {
+      cards: [...existing.map(c => ({ id: c.id, question: c.question, answer: c.answer, card_type: c.card_type, choices: c.choices || [] })), ...newCards]
+    });
 
     showToast(`${aiCards.length} card${aiCards.length !== 1 ? 's' : ''} saved ✓`);
     document.getElementById('ai-save-phase').classList.add('hidden');
