@@ -330,7 +330,7 @@ app.post("/api/decks/:id/share", requireAuth, async (req, res) => {
     }
 
     // Create new token
-    const token = `share-${crypto.randomUUID()}`;
+    const token = `share-${uuidv4()}`;
     await pool.query(
       "INSERT INTO share_tokens (token, deck_id, created_by) VALUES ($1, $2, $3)",
       [token, deckId, userId]

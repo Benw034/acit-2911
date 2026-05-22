@@ -307,6 +307,8 @@ function toggleShuffle(deckId) {
 
 //  Share
 async function shareDeck(deckId) {
+  const deck = allDecks.find(d => d.id === deckId);
+  if (deck && deck.cardCount === 0) { showToast('Add cards before sharing'); return; }
   try {
     const { token } = await api('POST', `/decks/${deckId}/share`);
     const url = `${window.location.origin}/?token=${encodeURIComponent(token)}`;
@@ -355,6 +357,8 @@ async function openDeck(deckId) {
 }
 
 async function openDeckQuiz(deckId) {
+  const deck = allDecks.find(d => d.id === deckId);
+  if (deck && deck.cardCount === 0) { showToast('Add cards to enable quiz mode'); return; }
   quizMode = true;
   quizScore = 0;
   quizTotalAnswer = 0;

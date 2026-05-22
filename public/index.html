@@ -96,12 +96,6 @@
             Import CSV
           </button>
         </div>
-        <a href="/ai.html"
-        <button onclick="openNewDeckModal()"
-          class="flex items-center gap-2 bg-stone-900 text-white text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-stone-700 transition-colors">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          New Deck
-        </button>
         <button onclick="openAiPanel()"
           class="flex items-center gap-2 bg-stone-900 text-white text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-stone-700 transition-colors">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
@@ -114,13 +108,19 @@
             Logout
           </button>
         </div>
-        <button onclick="toggleDark()" id="dark-toggle"
-          class="flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-lg border border-stone-200 text-stone-500 hover:border-stone-400 hover:text-stone-700 transition-colors">
-          <svg id="dark-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-          </svg>
-          <span id="dark-label">Dark mode</span>
-        </button>
+        <div id="theme-picker-wrap" class="relative">
+          <button onclick="toggleThemePicker()"
+            class="flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-lg border border-stone-200 text-stone-500 hover:border-stone-400 hover:text-stone-700 transition-colors">
+            <svg width="12" height="12" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="currentColor"/></svg>
+            <span id="theme-label">Light</span>
+          </button>
+          <div id="theme-dropdown" class="hidden absolute right-0 top-full mt-1 border border-stone-200 rounded-xl shadow-lg z-50 w-full overflow-hidden">
+            <button data-theme-btn="light"  onclick="setTheme('light')"  style="background:#fafaf9;color:#1c1917" class="w-full flex items-center gap-2 px-3 py-2 text-xs rounded-t-xl hover:opacity-75 transition-opacity"><span class="w-3 h-3 rounded-full border border-stone-300 inline-block shrink-0" style="background:#ffffff"></span>Light</button>
+            <button data-theme-btn="dark"   onclick="setTheme('dark')"   style="background:#1c1917;color:#e7e5e4" class="w-full flex items-center gap-2 px-3 py-2 text-xs hover:opacity-75 transition-opacity"><span class="w-3 h-3 rounded-full inline-block shrink-0" style="background:#44403c"></span>Dark</button>
+            <button data-theme-btn="ocean"  onclick="setTheme('ocean')"  style="background:#eff6ff;color:#1e3a5f" class="w-full flex items-center gap-2 px-3 py-2 text-xs hover:opacity-75 transition-opacity"><span class="w-3 h-3 rounded-full inline-block shrink-0" style="background:#1d4ed8"></span>Ocean</button>
+            <button data-theme-btn="forest" onclick="setTheme('forest')" style="background:#f0fdf4;color:#14532d" class="w-full flex items-center gap-2 px-3 py-2 text-xs rounded-b-xl hover:opacity-75 transition-opacity"><span class="w-3 h-3 rounded-full inline-block shrink-0" style="background:#15803d"></span>Forest</button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -269,15 +269,18 @@
       <div class="mb-6">
         <label class="block text-sm font-semibold mb-2">Category <span class="font-normal text-stone-400">(optional)</span></label>
         <div class="flex gap-2">
-        <input id="deck-category-input" list="category-options" type="text" maxlength="20"
-        placeholder="Type or select a category"
-        class="flex-1 px-3.5 py-2.5 rounded-xl border border-stone-200 bg-stone-50 text-sm focus:outline-none focus:border-stone-800 focus:bg-white transition-colors" />
-        <button onclick="addCatToDeck()" type="button"
-        class="px-4 py-2.5 bg-stone-900 text-white text-sm font-semibold rounded-xl hover:bg-stone-700 transition-colors">
-        Add
-        </button>
-      </div>
-    <datalist id="category-options"></datalist>
+          <div class="relative flex-1">
+            <input id="deck-category-input" type="text" maxlength="20"
+              placeholder="Type or select a category"
+              oninput="showCategorySuggestions()" onfocus="showCategorySuggestions()"
+              class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-stone-50 text-sm focus:outline-none focus:border-stone-800 focus:bg-white transition-colors" />
+            <ul id="category-suggestions" class="absolute z-10 left-0 right-0 top-full mt-1 bg-white border border-stone-200 rounded-xl shadow-lg hidden max-h-40 overflow-y-auto text-sm"></ul>
+          </div>
+          <button onclick="addCatToDeck()" type="button"
+            class="px-4 py-2.5 bg-stone-900 text-white text-sm font-semibold rounded-xl hover:bg-stone-700 transition-colors">
+            Add
+          </button>
+        </div>
   <div id="deck-category-preview"
     class="w-full mt-3 min-h-14 px-3.5 py-2.5 rounded-xl border border-stone-200 bg-stone-50 text-sm text-stone-500 flex flex-wrap gap-2">
     No categories selected
@@ -373,7 +376,11 @@
         <button onclick="closeCsvModal()" class="px-4 py-2 text-sm font-medium rounded-xl border border-stone-200 hover:border-stone-400 transition-colors">Cancel</button>
         <button id="csv-import-btn" onclick="submitCsv()" disabled
           class="px-4 py-2 text-sm font-semibold rounded-xl bg-stone-900 text-white hover:bg-stone-700 transition-colors">
-          Import
+          Import</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Share Deck -->
   <div id="share-modal" class="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/40 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-200">
     <div id="share-modal-box" class="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl translate-y-4 transition-transform duration-200">
@@ -402,7 +409,7 @@
   </audio>
 
   <!-- AI Card Generator Panel -->
-  <div id="ai-modal" class="fixed inset-0 z-40 flex items-center justify-center bg-black/40 opacity-0 pointer-events-none transition-opacity duration-200" style="display:none">
+  <div id="ai-modal" class="fixed inset-0 z-40 flex items-center justify-center p-6 bg-black/40 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-200" style="display:none">
     <div id="ai-modal-box" class="bg-white rounded-2xl shadow-2xl w-full max-w-xl mx-4 max-h-[90vh] flex flex-col translate-y-4 transition-transform duration-200">
 
       <!-- Header -->
