@@ -493,7 +493,7 @@
         <!-- Phase 1: Prompt + options -->
         <div id="ai-prompt-phase">
           <label class="block text-sm font-semibold mb-2">Topic or instructions</label>
-          <textarea id="ai-prompt-input" rows="3"
+          <textarea id="ai-prompt-input" rows="3" maxlength="1000"
             placeholder="e.g. Key events of the French Revolution, or JavaScript closures with examples."
             class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-stone-50 text-sm focus:outline-none focus:border-stone-800 focus:bg-white transition-colors resize-none"></textarea>
 
@@ -592,7 +592,7 @@
           <div id="ai-new-deck-row" class="hidden space-y-2">
             <input id="ai-new-deck-title" type="text" placeholder="New deck name…" maxlength="50"
               class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-stone-50 text-sm focus:outline-none focus:border-stone-800">
-            <input id="ai-new-deck-category" type="text" placeholder="Category (optional)"
+            <input id="ai-new-deck-category" type="text" placeholder="Category (optional)" maxlength="20"
               class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-stone-50 text-sm focus:outline-none focus:border-stone-800">
           </div>
         </div>
