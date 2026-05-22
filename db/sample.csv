@@ -1,7 +1,11 @@
-
-deck_title,question,answer,deck_category,card_type,choices
-Computer Science Basics,What does CPU stand for?,Central Processing Unit,Technology,basic,
-Computer Science Basics,Which data structure uses FIFO order?,Queue,Technology,multiple_choice,Stack|Queue|Tree|Graph
-World History,Who was the first president of the United States?,George Washington,History,basic,
-Biology Essentials,What organ pumps blood through the body?,Heart,Science,multiple_choice,Lungs|Brain|Heart|Kidneys
-Math Practice,What is 9 × 8?,72,Mathematics,basic,
+question,answer,card_type,choices
+"What is the largest planet in our solar system?",Jupiter,basic,
+"Which planet is known as the Red Planet?",Mars,multiple_choice,"Mars|Venus|Saturn|Mercury"
+"Mercury is the closest planet to the Sun.",True,true_false,
+"Which planet has the most prominent ring system?",Saturn,basic,
+"Which planet is famous for its Great Red Spot storm?",Jupiter,multiple_choice,"Earth|Jupiter|Neptune|Mars"
+"Venus is hotter than Mercury.",True,true_false,
+"Which planet is known for its blue color caused by methane gas?",Neptune,basic,
+"Which planet is the smallest in our solar system?",Mercury,multiple_choice,"Mars|Mercury|Venus|Earth"
+"Earth is the only known planet to support life.",True,true_false,
+"Which planet is tilted on its side, making its rotation unusual?",Uranus,basic,
