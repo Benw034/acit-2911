@@ -211,6 +211,9 @@ app.get("/api/decks/:deckId", requireAuth, async (req, res) => {
   }
 });
 
+const LIMITS = { deckTitle: 50, deckCategory: 20, question: 200, answer: 200, choiceText: 100, aiPrompt: 1000 };
+const truncate = (str, max) => (str || '').slice(0, max);
+
 app.post("/api/decks", requireAuth, async (req, res) => {
   try {
     const { title, category } = req.body;
@@ -220,9 +223,9 @@ app.post("/api/decks", requireAuth, async (req, res) => {
     }
 
     const sanitizeOpts = { FORBID_TAGS: ["style", "script", "iframe"] };
-    const cleanTitle = DOMPurify.sanitize(title.trim(), sanitizeOpts);
+    const cleanTitle = DOMPurify.sanitize(truncate(title.trim(), LIMITS.deckTitle), sanitizeOpts);
     const cleanCategory = DOMPurify.sanitize(
-      (category || "").trim().toLowerCase(),
+      truncate((category || "").trim().toLowerCase(), LIMITS.deckCategory),
       sanitizeOpts,
     );
 
@@ -256,10 +259,10 @@ app.put("/api/decks/:deckId", requireAuth, async (req, res) => {
     if (!title || !title.trim()) {
       return res.status(400).json({ error: "Title is required" });
     }
-    const cleanTitle = DOMPurify.sanitize(title.trim(), {
+    const cleanTitle = DOMPurify.sanitize(truncate(title.trim(), LIMITS.deckTitle), {
       FORBID_TAGS: ["style", "script", "iframe"],
     });
-    const cleanCategory = DOMPurify.sanitize((category || "").trim().toLowerCase(), {
+    const cleanCategory = DOMPurify.sanitize(truncate((category || "").trim().toLowerCase(), LIMITS.deckCategory), {
       FORBID_TAGS: ["style", "script", "iframe"],
     });
 
@@ -527,14 +530,14 @@ app.post("/api/decks/:deckId/cards", requireAuth, async (req, res) => {
   const cardId = `card-${uuidv4()}`;
 
   const sanitizeOpts = { FORBID_TAGS: ["style", "script", "iframe"] };
-  const cleanQuestion = DOMPurify.sanitize((question || '').trim(), sanitizeOpts);
-  const cleanAnswer = DOMPurify.sanitize((answer || '').trim(), sanitizeOpts);
+  const cleanQuestion = DOMPurify.sanitize(truncate((question || '').trim(), LIMITS.question), sanitizeOpts);
+  const cleanAnswer = DOMPurify.sanitize(truncate((answer || '').trim(), LIMITS.answer), sanitizeOpts);
 
   if (!cleanQuestion || !cleanAnswer) {
     return res.status(400).json({ error: "Valid question and answer required" });
   }
 
-  const client = await pool.connect(); 
+  const client = await pool.connect();
   try {
     const deckCheck = await client.query(
       "SELECT id FROM decks WHERE id = $1 AND user_id = $2",
@@ -566,9 +569,9 @@ app.post("/api/decks/:deckId/cards", requireAuth, async (req, res) => {
       for (const choice of choices) {
         const rawText = choice.choice_text || choice.choiceText || '';
         const isCorrect = choice.is_correct !== undefined ? choice.is_correct : choice.isCorrect;
-        
+
         if (rawText.trim()) {
-          const cleanChoiceText = DOMPurify.sanitize(rawText.trim(), sanitizeOpts);
+          const cleanChoiceText = DOMPurify.sanitize(truncate(rawText.trim(), LIMITS.choiceText), sanitizeOpts);
           await client.query(
             `INSERT INTO card_choices (id, card_id, choice_text, is_correct) VALUES ($1, $2, $3, $4)`,
             [`choice-${uuidv4()}`, cardId, cleanChoiceText, !!isCorrect]
@@ -646,8 +649,8 @@ app.put("/api/decks/:deckId/cards/bulk", requireAuth, async (req, res) => {
     for (let i = 0; i < cards.length; i++) {
       const { id, question, answer, card_type, choices = [] } = cards[i];
       const finalType = card_type === "true_false" ? "multiple_choice" : (["basic", "multiple_choice"].includes(card_type) ? card_type : "basic");
-      const cleanQ = DOMPurify.sanitize((question || "").trim(), sanitizeOpts);
-      const cleanA = DOMPurify.sanitize((answer || "").trim(), sanitizeOpts);
+      const cleanQ = DOMPurify.sanitize(truncate((question || "").trim(), LIMITS.question), sanitizeOpts);
+      const cleanA = DOMPurify.sanitize(truncate((answer || "").trim(), LIMITS.answer), sanitizeOpts);
       if (!cleanQ || !cleanA) continue;
 
       let cardId;
@@ -671,7 +674,7 @@ app.put("/api/decks/:deckId/cards/bulk", requireAuth, async (req, res) => {
       await client.query(`DELETE FROM card_choices WHERE card_id = $1`, [cardId]);
       if ((finalType === "multiple_choice" || finalType === "true_false") && choices.length) {
         for (const ch of choices) {
-          const cleanText = DOMPurify.sanitize((ch.choiceText || "").trim(), sanitizeOpts);
+          const cleanText = DOMPurify.sanitize(truncate((ch.choiceText || "").trim(), LIMITS.choiceText), sanitizeOpts);
           if (!cleanText) continue;
           await client.query(
             `INSERT INTO card_choices (id, card_id, choice_text, is_correct) VALUES ($1, $2, $3, $4)`,
@@ -699,8 +702,8 @@ app.put("/api/decks/:deckId/cards/:cardId", requireAuth, async (req, res) => {
   const { question, answer, card_type = 'basic', choices = [] } = req.body;
   const userId = req.session.userId;
   const sanitizeOpts = { FORBID_TAGS: ["style", "script", "iframe"] };
-  const cleanQuestion = DOMPurify.sanitize(question.trim(), sanitizeOpts);
-  const cleanAnswer = DOMPurify.sanitize(answer.trim(), sanitizeOpts);
+  const cleanQuestion = DOMPurify.sanitize(truncate(question.trim(), LIMITS.question), sanitizeOpts);
+  const cleanAnswer = DOMPurify.sanitize(truncate(answer.trim(), LIMITS.answer), sanitizeOpts);
 
   if (!cleanQuestion || !cleanAnswer) {
     return res.status(400).json({ error: "Valid question and answer required" });

@@ -981,7 +981,7 @@ function bulkRowHtml(row, idx) {
           <button type="button" onclick="bulkToggleCorrect(${idx},${ci})"
             class="w-4 h-4 rounded-full border-2 shrink-0 transition-colors ${ch.isCorrect ? 'bg-green-500 border-green-500' : 'border-stone-300'}"
             title="Mark correct"></button>
-          <input type="text" value="${esc(ch.choiceText)}" placeholder="Choice…"
+          <input type="text" value="${esc(ch.choiceText)}" placeholder="Choice…" maxlength="100"
             oninput="bulkChoiceChanged(${idx},${ci},this.value); bulkMarkDirty()"
             onkeydown="bulkChoiceTabHandler(event,${idx},${ci})"
             class="flex-1 min-w-0 bg-transparent text-sm focus:outline-none placeholder-stone-300" />
@@ -1000,7 +1000,7 @@ function bulkRowHtml(row, idx) {
           <span class="text-sm text-stone-700">${esc(ch.choiceText)}</span>
         </div>`).join('')}
     </div>` :
-    `<textarea rows="2" placeholder="Answer…" data-row="${idx}" data-field="answer"
+    `<textarea rows="2" placeholder="Answer…" maxlength="200" data-row="${idx}" data-field="answer"
       class="bulk-a flex-1 px-3 py-2 rounded-xl border border-stone-200 bg-stone-50 text-sm focus:outline-none focus:border-stone-800 focus:bg-white transition-colors resize-none"
       oninput="bulkMarkDirty()"
       onkeydown="bulkTabHandler(event,${idx},'answer')">${esc(row.answer || '')}</textarea>`;
@@ -1051,7 +1051,7 @@ function bulkRowHtml(row, idx) {
       </div>
 
       <!-- Question -->
-      <textarea rows="2" placeholder="Question…" data-row="${idx}" data-field="question"
+      <textarea rows="2" placeholder="Question…" maxlength="200" data-row="${idx}" data-field="question"
         class="bulk-q flex-1 px-3 py-2 rounded-xl border border-stone-200 bg-stone-50 text-sm focus:outline-none focus:border-stone-800 focus:bg-white transition-colors resize-none"
         oninput="bulkMarkDirty()"
         onkeydown="bulkTabHandler(event,${idx},'question')">${esc(row.question || '')}</textarea>
@@ -1132,12 +1132,16 @@ function bulkTypeChanged(idx, newType) {
     if (row._stashedChoices?.length) {
       row.choices = row._stashedChoices;
       row._stashedChoices = null;
-    } else if (!row.choices?.length) {
-      const ans = (row.answer || '').trim();
-      row.choices = [
-        { choiceText: ans, isCorrect: !!ans },
-        { choiceText: '', isCorrect: false },
-      ];
+    } else {
+      const isTfRemnant = row.choices?.length === 2 &&
+        row.choices.map(c => c.choiceText.toLowerCase()).sort().join() === 'false,true';
+      if (!row.choices?.length || isTfRemnant) {
+        const ans = (row.answer || '').trim();
+        row.choices = [
+          { choiceText: ans, isCorrect: !!ans },
+          { choiceText: '', isCorrect: false },
+        ];
+      }
     }
   }
   // basic: leave choices intact so switching back to MCQ/TF restores them
@@ -1491,12 +1495,43 @@ if (volumeBtn) {
   });
 }
 
-document.addEventListener(
-  "click", () => {
-    if (backgroundMusic) backgroundMusic.play();
-  },
-  {once: true}
-);
+// iOS ignores audio.volume — disable music entirely to avoid uncontrollable playback
+const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent) ||
+  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+// Start music on first interaction (required by browsers), skip on iOS
+let musicStarted = false;
+if (!isIos) {
+  document.addEventListener("click", () => {
+    if (backgroundMusic && !musicStarted && musicVolume > 0) {
+      musicStarted = true;
+      backgroundMusic.play().catch(() => {});
+    }
+  }, { once: true });
+}
+
+// Pause music when tab is hidden / app is backgrounded; resume when visible again
+document.addEventListener("visibilitychange", () => {
+  if (!backgroundMusic || !musicStarted || isIos) return;
+  if (document.hidden) {
+    backgroundMusic.pause();
+  } else if (musicVolume > 0) {
+    backgroundMusic.play().catch(() => {});
+  }
+});
+
+// iOS does not allow JS volume control — disable sliders with a note
+if (isIos) {
+  [musicVolumeSlider, sfxVolumeSlider].forEach(slider => {
+    if (!slider) return;
+    slider.disabled = true;
+    slider.title = 'Volume is controlled by your device buttons on iOS';
+  });
+  const note = document.createElement('p');
+  note.className = 'text-xs text-stone-400 mt-2 text-center';
+  note.textContent = 'Volume is controlled by device buttons on iOS.';
+  musicVolumeSlider?.closest('.mb-4')?.parentElement?.appendChild(note);
+}
 //  Shared deck state — declared before init() so loadSharedDeck can access them
 let sharedDeckData = null;
 let sharedCardIndex = 0;
@@ -1858,6 +1893,7 @@ function addChoiceRow(text = '', isCorrect = false, opts = {}) {
   input.type = 'text';
   input.className = 'choice-text' + (locked ? ' choice-text--locked' : '');
   input.placeholder = 'Choice text...';
+  input.maxLength = 100;
   input.value = locked ? displayValue : text;
   if (locked) {
     input.readOnly = true;

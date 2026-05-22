@@ -14,16 +14,16 @@ CREATE TABLE users (
 CREATE TABLE decks (
   id TEXT PRIMARY KEY,
   user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
-  title TEXT NOT NULL,
-  category TEXT,
+  title VARCHAR(50) NOT NULL,
+  category VARCHAR(20),
   creation_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE cards (
   id TEXT PRIMARY KEY,
   deck_id TEXT NOT NULL REFERENCES decks(id) ON DELETE CASCADE,
-  question TEXT NOT NULL,
-  answer TEXT NOT NULL,
+  question VARCHAR(200) NOT NULL,
+  answer VARCHAR(200) NOT NULL,
   card_type TEXT NOT NULL DEFAULT 'basic',
   position INTEGER NOT NULL DEFAULT 0,
   creation_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -45,7 +45,7 @@ CREATE INDEX idx_share_tokens_deck_id ON share_tokens(deck_id);
 CREATE TABLE card_choices (
   id TEXT PRIMARY KEY,
   card_id TEXT NOT NULL REFERENCES cards(id) ON DELETE CASCADE,
-  choice_text TEXT NOT NULL,
+  choice_text VARCHAR(100) NOT NULL,
   is_correct BOOLEAN NOT NULL DEFAULT false
 );
 

@@ -234,7 +234,7 @@ router.post("/csv/parse", requireAuth, upload.single("file"), async (req, res) =
       let choices;
       if (cardType === "multiple_choice" && rawChoices.trim()) {
         choices = rawChoices.split("|").map((c) => c.trim()).filter(Boolean).map((c) => ({
-          choiceText: DOMPurify.sanitize(c, PURIFY_OPTS),
+          choiceText: DOMPurify.sanitize(c.slice(0, 100), PURIFY_OPTS),
           isCorrect: c.toLowerCase() === answerLower,
         }));
       } else if (cardType === "true_false") {
@@ -247,10 +247,10 @@ router.post("/csv/parse", requireAuth, upload.single("file"), async (req, res) =
       }
 
       rows.push({
-        deck_title:    DOMPurify.sanitize((row[idx.deckTitle]    ?? "").trim(), PURIFY_OPTS),
-        deck_category: DOMPurify.sanitize((idx.deckCategory !== -1 ? (row[idx.deckCategory] ?? "") : "").trim(), PURIFY_OPTS),
-        question:      DOMPurify.sanitize(rawQuestion.trim(), PURIFY_OPTS),
-        answer:        DOMPurify.sanitize(rawAnswer.trim(),   PURIFY_OPTS),
+        deck_title:    DOMPurify.sanitize((row[idx.deckTitle]    ?? "").trim().slice(0, 50),  PURIFY_OPTS),
+        deck_category: DOMPurify.sanitize((idx.deckCategory !== -1 ? (row[idx.deckCategory] ?? "") : "").trim().slice(0, 20), PURIFY_OPTS),
+        question:      DOMPurify.sanitize(rawQuestion.trim().slice(0, 200), PURIFY_OPTS),
+        answer:        DOMPurify.sanitize(rawAnswer.trim().slice(0, 200),   PURIFY_OPTS),
         card_type:     cardType,
         choices,
       });
