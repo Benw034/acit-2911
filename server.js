@@ -10,6 +10,7 @@ import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
 import bcrypt from "bcrypt";
 import aiRouter from "./routes/ai.js";
+import importRouter from "./routes/import.js";
 import { requireAuth } from "./middleware/auth.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -39,6 +40,7 @@ app.use(session({
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 app.use("/ai-chat", aiRouter);
+app.use("/api/import", importRouter);
 
 // AUTH ROUTES
 app.post("/api/auth/register", async (req, res) => {
@@ -328,7 +330,7 @@ app.post("/api/decks/:id/share", requireAuth, async (req, res) => {
     }
 
     // Create new token
-    const token = `share-${crypto.randomUUID()}`;
+    const token = `share-${uuidv4()}`;
     await pool.query(
       "INSERT INTO share_tokens (token, deck_id, created_by) VALUES ($1, $2, $3)",
       [token, deckId, userId]
