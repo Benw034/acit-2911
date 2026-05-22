@@ -716,9 +716,33 @@ async function doLogout() {
 
 
 document.addEventListener('DOMContentLoaded', () => {
-  
+  document.getElementById('add-choice-btn')?.addEventListener('click', () => addChoiceRow());
+});
+
 // CSV Import
 let csvFile = null;
+
+const CSV_TEMPLATE = `deck_title,question,answer,deck_category,card_type,choices\nMy Deck,What is the capital of France?,Paris,Geography,basic,\nMy Deck,Which is a primary colour?,Red,Art,multiple_choice,Red|Blue|Yellow|Green`;
+
+async function copyCsvSchema(btn) {
+  try {
+    await navigator.clipboard.writeText(CSV_TEMPLATE);
+  } catch {
+    const ta = document.createElement('textarea');
+    ta.value = CSV_TEMPLATE;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+  }
+  const orig = btn.textContent.trim();
+  btn.textContent = '✓';
+  btn.classList.add('border-green-500', 'text-green-500');
+  setTimeout(() => {
+    btn.textContent = orig;
+    btn.classList.remove('border-green-500', 'text-green-500');
+  }, 1500);
+}
 
 function openCsvModal() {
   csvFile = null;
@@ -811,9 +835,6 @@ async function submitCsv() {
   }
 }
 
-loadDecks();
-  document.getElementById('add-choice-btn')?.addEventListener('click', () => addChoiceRow());
-});
 
 
 // Stores MCQ rows locally when the user switches away, so they aren't lost
